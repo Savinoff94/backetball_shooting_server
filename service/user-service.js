@@ -9,16 +9,23 @@ const ApiError = require('../exeptions/api-error');
 
 class UserServise {
 
-    async registration(email, password) {
+    async registration(userName, email, password) {
         
-        const candidate = await UserModel.findOne({email});
+        let candidate = await UserModel.findOne({email});
         if(candidate) {
             throw ApiError.BadRequest('user with email:' + email + ' already exists');
         }
+
+        candidate = await UserModel.findOne({userName});
+        if(candidate) {
+            throw ApiError.BadRequest('user with login:' + userName + ' already exists');
+        }
+
         const hashPassword = await bcrypt.hash(password, 3);
-        const activationLink = uuid.v4()
-        const user = await UserModel.create({email, password: hashPassword, activationLink});
-        await mailService.sendActivationMail(email, process.env.API_URL + '/api/activate/' + activationLink);
+        // const activationLink = uuid.v4()
+        // const user = await UserModel.create({userName, email, password: hashPassword, activationLink});
+        // await mailService.sendActivationMail(email, process.env.API_URL + '/api/activate/' + activationLink);
+        const user = await UserModel.create({userName, email, password: hashPassword});
 
 
         const userDto = new UserDto(user);
