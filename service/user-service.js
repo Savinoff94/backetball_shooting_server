@@ -9,23 +9,23 @@ const ApiError = require('../exeptions/api-error');
 
 class UserServise {
 
-    async registration(userName, email, password) {
+    async registration(login, email, password) {
         
         let candidate = await UserModel.findOne({email});
         if(candidate) {
             throw ApiError.BadRequest('user with email:' + email + ' already exists');
         }
 
-        candidate = await UserModel.findOne({userName});
+        candidate = await UserModel.findOne({login});
         if(candidate) {
-            throw ApiError.BadRequest('user with login:' + userName + ' already exists');
+            throw ApiError.BadRequest('user with login:' + login + ' already exists');
         }
 
         const hashPassword = await bcrypt.hash(password, 3);
         // const activationLink = uuid.v4()
-        // const user = await UserModel.create({userName, email, password: hashPassword, activationLink});
+        // const user = await UserModel.create({login, email, password: hashPassword, activationLink});
         // await mailService.sendActivationMail(email, process.env.API_URL + '/api/activate/' + activationLink);
-        const user = await UserModel.create({userName, email, password: hashPassword});
+        const user = await UserModel.create({login, email, password: hashPassword});
 
 
         const userDto = new UserDto(user);
@@ -48,10 +48,10 @@ class UserServise {
 
     }
 
-    async login(email, password) {
-        const user = await UserModel.findOne({email})
+    async login(login, password) {
+        const user = await UserModel.findOne({login})
         if(!user) {
-            throw new ApiError.BadRequest('User with such email not found')
+            throw new ApiError.BadRequest('User with such login not found')
         }
         const isPassEquals = await bcrypt.compare(password, user.password)
         if(!isPassEquals) {
@@ -74,12 +74,15 @@ class UserServise {
         if(!refreshToken) {
             throw ApiError.UnauthorizedError()
         }
-        const userData = tokenService.validateRefreshToken(refreshToken)
+        const userData = await tokenService.validateRefreshToken(refreshToken)
+       
         const tokenFromDb = await tokenService.findToken(refreshToken)
         if(!userData || !tokenFromDb) {
             throw ApiError.UnauthorizedError()
         }
+       
         const user = await UserModel.findById(userData.id)
+       
         const userDto = new UserDto(user)
         const tokens = tokenService.generateTokens({...userDto})
 
