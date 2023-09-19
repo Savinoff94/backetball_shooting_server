@@ -1,5 +1,6 @@
 const ApiError = require('../exeptions/api-error');
 const userServise = require('../service/user-service');
+const userStatsService = require('../service/user-stats-service');
 const {validationResult} = require('express-validator');
 
 class UserController {
@@ -71,12 +72,23 @@ class UserController {
             next(error);
         }
     }
-    async getUsers(req,res,next) {
+
+    async searchUsers(req,res,next) {
 
         try {
-            const users = await userServise.getAllUsers();
-            return res.json(users)
+
+            const {login} = req.body;
+
+            const users = await userServise.getUsersByLogin(login);
+
+            const usersSimpleStats = await userStatsService.getUsersSimpleStats(Object.keys(users));
+
+            const usersWithSimpleStats = userServise.fillUsersWithSimpleStats(users, usersSimpleStats);
+
+            return res.json(usersWithSimpleStats);
+
         } catch (error) {
+            
             next(error);
         }
     }

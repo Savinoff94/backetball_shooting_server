@@ -5,6 +5,7 @@ const mailService = require('./mail-service');
 const tokenService = require('./token-service');
 const UserDto = require('../dtos/user-dto');
 const ApiError = require('../exeptions/api-error');
+const UserSimpleStatsDto = require('../dtos/user-simple-stats-dto');
 
 
 class UserServise {
@@ -72,12 +73,14 @@ class UserServise {
 
     async refresh(refreshToken) {
         if(!refreshToken) {
+            
             throw ApiError.UnauthorizedError()
         }
         const userData = await tokenService.validateRefreshToken(refreshToken)
        
         const tokenFromDb = await tokenService.findToken(refreshToken)
         if(!userData || !tokenFromDb) {
+
             throw ApiError.UnauthorizedError()
         }
        
@@ -93,6 +96,62 @@ class UserServise {
     async getAllUsers(){
         const users = await UserModel.find()
         return users
+    }
+
+    async getUsersByLogin(login) {
+
+        const result = {};
+
+        const regex = new RegExp(`^${login}`, 'i') 
+
+        const users = await UserModel.find({login: {$regex: regex}});
+
+        if(!users) {
+
+            return result;
+        }
+
+        users.forEach((user) => {
+
+            const userDto = new UserDto(user);
+
+            result[userDto.id] = userDto;
+        });
+
+        return result;
+    }
+
+    async getExactUser(login) {
+
+        const user = await UserModel.findOne({login});
+
+        if(!user) {
+
+            throw new ApiError.BadRequest('User with such login not found')
+        }
+
+        const userDto = new UserDto(user);
+
+        return {[userDto.id]:userDto}
+    }
+
+    fillUsersWithSimpleStats(users, simpleStats) {
+
+        const usersIds = Object.keys(users);
+
+        const result = {};
+
+        usersIds.forEach((userId) => {
+
+            const userSimpleStats = simpleStats[userId] ? simpleStats[userId] :  new UserSimpleStatsDto(null);
+
+            const user = users[userId];
+
+            result[userId] = {...user, simpleStats: userSimpleStats}
+
+        });
+
+        return result;
     }
 }
 

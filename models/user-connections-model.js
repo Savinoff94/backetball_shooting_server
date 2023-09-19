@@ -1,7 +1,7 @@
 const {Schema, model} = require('mongoose');
 
 const UserConnectionsSchema = new Schema({
-    hoderUserId: {type:String, unique:true, required: true},
+    holderUserId: {type:String, unique:true, required: true},
     fiends: {type:Array, default:[], required:true},
     pendingOtherUsersFriendRequests: {type:Array, default:[], required:true},
     pendingThisUserFriendRequests: {type:Array, default:[], required:true},

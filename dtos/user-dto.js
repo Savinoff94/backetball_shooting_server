@@ -5,7 +5,7 @@ module.exports = class UserDto {
     login;
     email;
     // isActivated;
-
+    // simpleStats
     constructor(model) {
 
         this.id = model._id
@@ -13,4 +13,9 @@ module.exports = class UserDto {
         this.email = model.email
         // this.isActivated = model.isActivated
     }
+
+    // setSimpleStats(simpleStats) {
+
+    //     this.simpleStats = new UserSimpleStatsDto(simpleStats)
+    // }
 }
