@@ -1,7 +1,8 @@
 const Router = require('express').Router;
 const userController = require('../controllers/user-controller');
 const {body} = require('express-validator');
-const authMiddleware = require('../middlewares/auth-middleware')
+const authMiddleware = require('../middlewares/auth-middleware');
+const userConnectionsController = require('../controllers/user-connections-controller');
 
 
 const router = new Router();
@@ -19,6 +20,7 @@ router.get('/refresh', userController.refresh);
 
 
 router.post('/searchUsers', authMiddleware, userController.searchUsers);
+router.post('/getUserConnections', authMiddleware, userConnectionsController.getUserConnections);
 
 
 module.exports = router;

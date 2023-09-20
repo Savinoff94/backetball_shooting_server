@@ -94,13 +94,15 @@ class UserServise {
     }
 
     async getAllUsers(){
+        
         const users = await UserModel.find()
-        return users
+
+        const usersDtos = this.getUsersDtosMap(users);
+
+        return usersDtos
     }
 
     async getUsersByLogin(login) {
-
-        const result = {};
 
         const regex = new RegExp(`^${login}`, 'i') 
 
@@ -111,14 +113,9 @@ class UserServise {
             return result;
         }
 
-        users.forEach((user) => {
+        const usersDtos = this.getUsersDtosMap(users);
 
-            const userDto = new UserDto(user);
-
-            result[userDto.id] = userDto;
-        });
-
-        return result;
+        return usersDtos;
     }
 
     async getExactUser(login) {
@@ -130,9 +127,9 @@ class UserServise {
             throw new ApiError.BadRequest('User with such login not found')
         }
 
-        const userDto = new UserDto(user);
-
-        return {[userDto.id]:userDto}
+        const usersDtos = this.getUsersDtosMap([user]);
+        
+        return usersDtos;
     }
 
     fillUsersWithSimpleStats(users, simpleStats) {
@@ -148,6 +145,33 @@ class UserServise {
             const user = users[userId];
 
             result[userId] = {...user, simpleStats: userSimpleStats}
+
+        });
+
+        return result;
+    }
+
+    async getUsersById(ids) {
+
+        const users = await Promise.all(
+
+            ids.map((id) => UserModel.findById(id))
+        )
+
+        const usersDtos = this.getUsersDtosMap(users);
+
+        return usersDtos;
+    }
+
+    getUsersDtosMap(users) {
+
+        const result = {};
+
+        users.forEach((user) => {
+
+            const userDto = new UserDto(user);
+
+            result[userDto.id] = userDto;
 
         });
 

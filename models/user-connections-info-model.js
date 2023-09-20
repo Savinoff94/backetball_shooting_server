@@ -1,6 +1,6 @@
 const {Schema, model} = require('mongoose');
 
-const UserConnectionsSchema = new Schema({
+const UserConnectionsInfoSchema = new Schema({
     holderUserId: {type:String, unique:true, required: true},
     fiends: {type:Array, default:[], required:true},
     pendingOtherUsersFriendRequests: {type:Array, default:[], required:true},
@@ -8,4 +8,4 @@ const UserConnectionsSchema = new Schema({
    
 })
 
-module.exports = model('UserConnections', UserConnectionsSchema);
+module.exports = model('UserConnectionsInfo', UserConnectionsInfoSchema);
