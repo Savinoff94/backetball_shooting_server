@@ -2,6 +2,7 @@ const UserModel = require('../models/user-model');
 const UserSimpleStatsModel = require('../models/user-simple-stats-model');
 const ApiError = require('../exeptions/api-error');
 const UserSimpleStatsDto = require('../dtos/user-simple-stats-dto');
+const userServise = require('../service/user-service');
 
 
 class UserStatsService {
@@ -29,6 +30,15 @@ class UserStatsService {
         });
     
         return result;
+    }
+
+    async fillSimpleStatsInUsers(users) {
+
+        const usersSimpleStats = await this.getUsersSimpleStats(Object.keys(users));
+
+        const usersWithSimpleStats = userServise.fillUsersWithSimpleStats(users, usersSimpleStats);
+
+        return usersWithSimpleStats;
     }
 }
 

@@ -22,5 +22,11 @@ router.get('/refresh', userController.refresh);
 router.post('/searchUsers', authMiddleware, userController.searchUsers);
 router.post('/getUserConnections', authMiddleware, userConnectionsController.getUserConnections);
 
+router.post('/friendRequest', authMiddleware, userConnectionsController.friendRequest);
+router.post('/cancelFriendRequest', authMiddleware, userConnectionsController.cancelFriendRequest);
+router.post('/approveFriendRequest', authMiddleware, userConnectionsController.approveFriendRequest);
+router.post('/disapproveFriendRequest', authMiddleware, userConnectionsController.disapproveFriendRequest);
+router.post('/removeFriendRequest', authMiddleware, userConnectionsController.removeFriendRequest);
+
 
 module.exports = router;

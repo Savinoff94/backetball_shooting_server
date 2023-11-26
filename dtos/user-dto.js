@@ -8,7 +8,7 @@ module.exports = class UserDto {
     // simpleStats
     constructor(model) {
 
-        this.id = model._id
+        this.id = model._id.valueOf()
         this.login = model.login
         this.email = model.email
         // this.isActivated = model.isActivated

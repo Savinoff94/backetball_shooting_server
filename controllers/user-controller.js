@@ -81,9 +81,7 @@ class UserController {
 
             const users = await userServise.getUsersByLogin(login);
 
-            const usersSimpleStats = await userStatsService.getUsersSimpleStats(Object.keys(users));
-
-            const usersWithSimpleStats = userServise.fillUsersWithSimpleStats(users, usersSimpleStats);
+            const usersWithSimpleStats = await userStatsService.fillSimpleStatsInUsers(users);
 
             return res.json(usersWithSimpleStats);
 
