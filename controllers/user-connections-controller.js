@@ -1,5 +1,6 @@
 const userConnectionsService = require('../service/user-connections-service')
 const userStatsService = require('../service/user-stats-service');
+const { default: mongoose } = require('mongoose');
 
 class UserConnectionsController {
     
@@ -34,7 +35,11 @@ class UserConnectionsController {
     }
 
     async friendRequest(req,res,next) {
-        
+
+        const session = await mongoose.startSession();
+
+        session.startTransaction();
+
         try {
 
             const userData = await req.user;
@@ -42,20 +47,26 @@ class UserConnectionsController {
             const {ids} = req.body;
 
             const userConnectionsInfo = await userConnectionsService.getUserConnectionsInfoByUserId(userId);
+            await userConnectionsService.friendRequest(userConnectionsInfo, ids, userId, session);
+            await userConnectionsService.friendRequestSideEffect(userId, ids, session);
 
-            await userConnectionsService.friendRequest(userConnectionsInfo, ids, userId);
-
-            await userConnectionsService.friendRequestSideEffect(userId, ids);
+            await session.commitTransaction();
 
             return res.sendStatus(200);
 
         } catch (error) {
+
+            await session.abortTransaction();
             
             next(error);
         }
 
     }
     async cancelFriendRequest(req,res,next) {
+
+        const session = await mongoose.startSession();
+
+        session.startTransaction();
         
         try {
 
@@ -65,18 +76,26 @@ class UserConnectionsController {
             
             
             const userConnectionsInfo = await userConnectionsService.getUserConnectionsInfoByUserId(userId);
-            await userConnectionsService.cancelFriendRequest(userConnectionsInfo, ids, userId);
-            await userConnectionsService.cancelFriendRequestSideEffect(userId, ids);
+            await userConnectionsService.cancelFriendRequest(userConnectionsInfo, ids, userId, session);
+            await userConnectionsService.cancelFriendRequestSideEffect(userId, ids, session);
+
+            await session.commitTransaction();
 
             return res.sendStatus(200);
             
         } catch (error) {
+
+            await session.abortTransaction();
             
             next(error);
         }
 
     }
     async approveFriendRequest(req,res,next) {
+
+        const session = await mongoose.startSession();
+
+        session.startTransaction();
         
         try {
 
@@ -86,18 +105,26 @@ class UserConnectionsController {
             
             
             const userConnectionsInfo = await userConnectionsService.getUserConnectionsInfoByUserId(userId);
-            await userConnectionsService.approveFriendRequest(userConnectionsInfo, ids, userId);
-            await userConnectionsService.approveFriendRequestSideEffect(userId, ids);
+            await userConnectionsService.approveFriendRequest(userConnectionsInfo, ids, userId, session);
+            await userConnectionsService.approveFriendRequestSideEffect(userId, ids, session);
+
+            await session.commitTransaction();
 
             return res.sendStatus(200);
             
         } catch (error) {
+
+            await session.abortTransaction();
             
             next(error);
         }
 
     }
     async disapproveFriendRequest(req,res,next) {
+
+        const session = await mongoose.startSession();
+
+        session.startTransaction();
         
         try {
             
@@ -107,18 +134,26 @@ class UserConnectionsController {
             
             
             const userConnectionsInfo = await userConnectionsService.getUserConnectionsInfoByUserId(userId);
-            await userConnectionsService.disapproveFriendRequest(userConnectionsInfo, ids, userId);
-            await userConnectionsService.disapproveFriendRequestSideEffect(userId, ids);
+            await userConnectionsService.disapproveFriendRequest(userConnectionsInfo, ids, userId, session);
+            await userConnectionsService.disapproveFriendRequestSideEffect(userId, ids, session);
+
+            await session.commitTransaction();
             
             return res.sendStatus(200);
             
         } catch (error) {
+
+            await session.abortTransaction();
             
             next(error);
         }
 
     }
     async removeFriendRequest(req,res,next) {
+
+        const session = await mongoose.startSession();
+
+        session.startTransaction();
         
         try {
 
@@ -128,12 +163,16 @@ class UserConnectionsController {
             
             
             const userConnectionsInfo = await userConnectionsService.getUserConnectionsInfoByUserId(userId);
-            await userConnectionsService.removeFriendRequest(userConnectionsInfo, ids, userId);
-            await userConnectionsService.removeFriendRequestSideEffect(userId, ids);
+            await userConnectionsService.removeFriendRequest(userConnectionsInfo, ids, userId, session);
+            await userConnectionsService.removeFriendRequestSideEffect(userId, ids, session, session);
+
+            await session.commitTransaction();
 
             return res.sendStatus(200);
             
         } catch (error) {
+
+            await session.abortTransaction();
             
             next(error);
         }

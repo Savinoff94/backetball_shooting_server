@@ -63,138 +63,151 @@ class UserConnectionsService {
     }
 
 
-    async friendRequest(userConnectionsInfo, usersIds, holderUserId) {
+    async friendRequest(userConnectionsInfo, usersIds, holderUserId, session = null) {
 
         this.addUserIdsToConnectionsCategory('pendingThisUsersFriendRequests', usersIds, userConnectionsInfo);
 
-        await this.saveUserConnectionsInfo(userConnectionsInfo, holderUserId);
+        await this.saveUserConnectionsInfo(userConnectionsInfo, holderUserId, session);
     }
-    async friendRequestSideEffect(userIdCausedSideEffect, userIdsUnderSideEffect) {
+    async friendRequestSideEffect(userIdCausedSideEffect, userIdsUnderSideEffect, session = null) {
 
         for(const userIdUnderSideEffect of userIdsUnderSideEffect) {
 
             const userConnectionsInfo = await this.getUserConnectionsInfoByUserId(userIdUnderSideEffect);
 
-            await this.onUserGetFriendRequest(userConnectionsInfo, [userIdCausedSideEffect], userIdUnderSideEffect);
+            await this.onUserGetFriendRequest(userConnectionsInfo, [userIdCausedSideEffect], userIdUnderSideEffect, session);
         }
 
     }
-    async onUserGetFriendRequest(userConnectionsInfo, usersIds, holderUserId) {
+    async onUserGetFriendRequest(userConnectionsInfo, usersIds, holderUserId, session = null) {
 
         this.addUserIdsToConnectionsCategory('pendingOtherUsersFriendRequests', usersIds, userConnectionsInfo);
 
-        await this.saveUserConnectionsInfo(userConnectionsInfo, holderUserId);
+        await this.saveUserConnectionsInfo(userConnectionsInfo, holderUserId, session);
     }
 
     //user cancells his own friend request
-    async cancelFriendRequest(userConnectionsInfo, usersIds, holderUserId) {
+    async cancelFriendRequest(userConnectionsInfo, usersIds, holderUserId, session = null) {
 
         this.removeUsersIdsFromConnectionsCategory('pendingThisUsersFriendRequests', usersIds, userConnectionsInfo);
 
-        await this.saveUserConnectionsInfo(userConnectionsInfo, holderUserId);
+        await this.saveUserConnectionsInfo(userConnectionsInfo, holderUserId, session);
     }
-    async cancelFriendRequestSideEffect(userIdCausedSideEffect, userIdsUnderSideEffect) {
+    async cancelFriendRequestSideEffect(userIdCausedSideEffect, userIdsUnderSideEffect, session = null) {
 
         for(const userIdUnderSideEffect of userIdsUnderSideEffect) {
 
             const userConnectionsInfo = await this.getUserConnectionsInfoByUserId(userIdUnderSideEffect);
 
-            await this.onUserGetFriendRequestCancelled(userConnectionsInfo, [userIdCausedSideEffect], userIdUnderSideEffect);
+            await this.onUserGetFriendRequestCancelled(userConnectionsInfo, [userIdCausedSideEffect], userIdUnderSideEffect, session);
         }
 
     }
-    async onUserGetFriendRequestCancelled(userConnectionsInfo, usersIds, holderUserId) {
+    async onUserGetFriendRequestCancelled(userConnectionsInfo, usersIds, holderUserId, session = null) {
 
         this.removeUsersIdsFromConnectionsCategory('pendingOtherUsersFriendRequests', usersIds, userConnectionsInfo);
 
-        await this.saveUserConnectionsInfo(userConnectionsInfo, holderUserId);
+        await this.saveUserConnectionsInfo(userConnectionsInfo, holderUserId, session);
     }
 
 
-    async approveFriendRequest(userConnectionsInfo, usersIds, holderUserId) {
+    async approveFriendRequest(userConnectionsInfo, usersIds, holderUserId, session = null) {
 
         this.removeUsersIdsFromConnectionsCategory('pendingOtherUsersFriendRequests', usersIds, userConnectionsInfo);
         this.addUserIdsToConnectionsCategory('friends', usersIds, userConnectionsInfo);
 
-        await this.saveUserConnectionsInfo(userConnectionsInfo, holderUserId);
+        await this.saveUserConnectionsInfo(userConnectionsInfo, holderUserId, session);
     }
-    async approveFriendRequestSideEffect(userIdCausedSideEffect, userIdsUnderSideEffect) {
+    async approveFriendRequestSideEffect(userIdCausedSideEffect, userIdsUnderSideEffect, session = null) {
 
         for(const userIdUnderSideEffect of userIdsUnderSideEffect) {
 
             const userConnectionsInfo = await this.getUserConnectionsInfoByUserId(userIdUnderSideEffect);
 
-            await this.onUserFriendRequestApproval(userConnectionsInfo, [userIdCausedSideEffect], userIdUnderSideEffect);
+            await this.onUserFriendRequestApproval(userConnectionsInfo, [userIdCausedSideEffect], userIdUnderSideEffect, session);
         }
     }
-    async onUserFriendRequestApproval(userConnectionsInfo, usersIds, holderUserId) {
+    async onUserFriendRequestApproval(userConnectionsInfo, usersIds, holderUserId, session = null) {
 
         this.removeUsersIdsFromConnectionsCategory('pendingThisUsersFriendRequests', usersIds, userConnectionsInfo);
         this.addUserIdsToConnectionsCategory('friends', usersIds, userConnectionsInfo);
 
-        await this.saveUserConnectionsInfo(userConnectionsInfo, holderUserId);
+        await this.saveUserConnectionsInfo(userConnectionsInfo, holderUserId, session);
     }
     
 
-    async disapproveFriendRequest(userConnectionsInfo, usersIds, holderUserId) {
+    async disapproveFriendRequest(userConnectionsInfo, usersIds, holderUserId, session = null) {
 
         this.removeUsersIdsFromConnectionsCategory('pendingOtherUsersFriendRequests', usersIds, userConnectionsInfo);
 
-        await this.saveUserConnectionsInfo(userConnectionsInfo, holderUserId);
+        await this.saveUserConnectionsInfo(userConnectionsInfo, holderUserId, session);
     }
-    async disapproveFriendRequestSideEffect(userIdCausedSideEffect, userIdsUnderSideEffect) {
+    async disapproveFriendRequestSideEffect(userIdCausedSideEffect, userIdsUnderSideEffect, session = null) {
 
         for(const userIdUnderSideEffect of userIdsUnderSideEffect) {
 
             const userConnectionsInfo = await this.getUserConnectionsInfoByUserId(userIdUnderSideEffect);
 
-            await this.onUserDisapprovalFriendRequest(userConnectionsInfo, [userIdCausedSideEffect], userIdUnderSideEffect);
+            await this.onUserDisapprovalFriendRequest(userConnectionsInfo, [userIdCausedSideEffect], userIdUnderSideEffect, session);
         }
     }
-    async onUserDisapprovalFriendRequest(userConnectionsInfo, usersIds, holderUserId) {
+    async onUserDisapprovalFriendRequest(userConnectionsInfo, usersIds, holderUserId, session = null) {
 
         this.removeUsersIdsFromConnectionsCategory('pendingThisUsersFriendRequests', usersIds, userConnectionsInfo);
 
-        await this.saveUserConnectionsInfo(userConnectionsInfo, holderUserId);
+        await this.saveUserConnectionsInfo(userConnectionsInfo, holderUserId, session);
     }
 
     // remove already added friend
-    async removeFriendRequest(userConnectionsInfo, usersIds, holderUserId) {
+    async removeFriendRequest(userConnectionsInfo, usersIds, holderUserId, session = null) {
 
         this.removeUsersIdsFromConnectionsCategory('friends', usersIds, userConnectionsInfo);
 
-        await this.saveUserConnectionsInfo(userConnectionsInfo, holderUserId);
+        await this.saveUserConnectionsInfo(userConnectionsInfo, holderUserId, session);
     }
-    async removeFriendRequestSideEffect(userIdCausedSideEffect, userIdsUnderSideEffect) {
+    async removeFriendRequestSideEffect(userIdCausedSideEffect, userIdsUnderSideEffect, session = null) {
 
         for(const userIdUnderSideEffect of userIdsUnderSideEffect) {
 
             const userConnectionsInfo = await this.getUserConnectionsInfoByUserId(userIdUnderSideEffect);
 
-            await this.onUserRemoveFriendRequest(userConnectionsInfo, [userIdCausedSideEffect], userIdUnderSideEffect);
+            await this.onUserRemoveFriendRequest(userConnectionsInfo, [userIdCausedSideEffect], userIdUnderSideEffect, session);
         }
     }
-    async onUserRemoveFriendRequest(userConnectionsInfo, usersIds, holderUserId) {
+    async onUserRemoveFriendRequest(userConnectionsInfo, usersIds, holderUserId, session = null) {
 
         this.removeUsersIdsFromConnectionsCategory('friends', usersIds, userConnectionsInfo);
 
-        await this.saveUserConnectionsInfo(userConnectionsInfo, holderUserId);
+        await this.saveUserConnectionsInfo(userConnectionsInfo, holderUserId, session);
     }
 
 
-    async saveUserConnectionsInfo(userConnectionsInfo, holderUserId) {
+    async saveUserConnectionsInfo(userConnectionsInfo, holderUserId, session = null) {
 
-        if(!userConnectionsInfo['holderUserId']) {
+        if(session) {
 
-            await UserConnectionsInfoModel.create({...userConnectionsInfo,holderUserId: holderUserId});
+            if(!userConnectionsInfo['holderUserId']) {
 
-            return;
+                await UserConnectionsInfoModel.create([{...userConnectionsInfo,holderUserId: holderUserId}], {session});
+    
+                return;
+            }
+    
+            await UserConnectionsInfoModel.findOneAndUpdate({holderUserId: holderUserId}, {...userConnectionsInfo}).session(session);
+
         }
+        else {
 
-        await UserConnectionsInfoModel.findOneAndUpdate({holderUserId: holderUserId}, {...userConnectionsInfo});
+            if(!userConnectionsInfo['holderUserId']) {
+
+                await UserConnectionsInfoModel.create([{...userConnectionsInfo,holderUserId: holderUserId}]);
+    
+                return;
+            }
+    
+            await UserConnectionsInfoModel.findOneAndUpdate({holderUserId: holderUserId}, {...userConnectionsInfo});
+        }
     }
-    
-    
 }
 
 module.exports = new UserConnectionsService();
