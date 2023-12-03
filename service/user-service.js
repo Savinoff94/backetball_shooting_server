@@ -108,11 +108,6 @@ class UserServise {
 
         const users = await UserModel.find({login: {$regex: regex}});
 
-        if(!users) {
-
-            return result;
-        }
-
         const usersDtos = this.getUsersDtosMap(users);
 
         return usersDtos;

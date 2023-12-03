@@ -79,7 +79,11 @@ class UserController {
 
             const {login} = req.body;
 
+            const currentUserInfo = await req.user;
+            
             const users = await userServise.getUsersByLogin(login);
+
+            delete users[currentUserInfo.id];
 
             const usersWithSimpleStats = await userStatsService.fillSimpleStatsInUsers(users);
 
