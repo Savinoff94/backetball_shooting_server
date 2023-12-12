@@ -1,5 +1,6 @@
 const userConnectionsService = require('../service/user-connections-service')
 const userStatsService = require('../service/user-stats-service');
+const userService = require('../service/user-service');
 const { default: mongoose } = require('mongoose');
 
 class UserConnectionsController {
@@ -16,7 +17,7 @@ class UserConnectionsController {
             const userConnectionsInfo = await userConnectionsService.getUserConnectionsInfoByUserId(userId);
             
             const userConnections = await userConnectionsService.getUserConnections(userConnectionsInfo);
-
+ 
             const userConnectionsTypes = Object.keys(userConnections);
 
             for(const userConncetionType of userConnectionsTypes) {
@@ -177,6 +178,29 @@ class UserConnectionsController {
             next(error);
         }
 
+    }
+    async getTrainingSquadList(req,res,next) {
+
+        try {
+
+            const userData = await req.user;
+
+            const userId = userData.id;
+
+            const userConnectionsInfo = await userConnectionsService.getUserConnectionsInfoByUserId(userId);
+
+            const trainingSquadIds = [...userConnectionsInfo['friends'], userId];
+
+            const trainingSquadUsersMap = await userService.getUsersById(trainingSquadIds);
+
+            const trainingSquadList = await userStatsService.fillSimpleStatsInUsers(trainingSquadUsersMap)
+
+            return res.json(trainingSquadList);
+            
+        } catch (error) {
+            
+            next(error);
+        }
     }
 }
 
