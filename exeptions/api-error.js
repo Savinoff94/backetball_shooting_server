@@ -18,4 +18,9 @@ module.exports = class ApiError extends Error{
 
         return new ApiError(400, message, errors);
     }
+
+    static SessionError(message) {
+
+        return new ApiError(409, message);
+    }
 }

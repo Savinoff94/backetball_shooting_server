@@ -14,9 +14,9 @@ class UserConnectionsController {
 
             const userId = userData.id;
 
-            const userConnectionsInfo = await userConnectionsService.getUserConnectionsInfoByUserId(userId);
+            const userConnectionsDto = await userConnectionsService.getUserConnectionsDtoByUserId(userId);
             
-            const userConnections = await userConnectionsService.getUserConnections(userConnectionsInfo);
+            const userConnections = await userConnectionsService.getUserConnectionsFilledWithUsers(userConnectionsDto);
  
             const userConnectionsTypes = Object.keys(userConnections);
 

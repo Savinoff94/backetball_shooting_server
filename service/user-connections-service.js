@@ -1,21 +1,95 @@
 const UserConnectionsInfoModel = require('../models/user-connections-info-model');
+const UserModel = require('../models/user-model');
 const UserConnectionsInfoDto = require('../dtos/user-connections-info-dto')
 const ApiError = require('../exeptions/api-error');
 const userService = require('./user-service');
+const UserReferencesDto = require('../dtos/user-references-dto');
+const { default: mongoose } = require('mongoose');
+
 
 
 class UserConnectionsService {
 
-    async getUserConnectionsInfoByUserId(userId) {
+    async getUserConnectionsDocumentByUserId(userId) {
 
-        const userConncectionsInfo = await UserConnectionsInfoModel.findOne({holderUserId: userId});
+        const userDocument = await UserModel.findById(userId);
+
+        if(!userDocument) {
+
+            throw ApiError.BadRequest('wrong user id:' + userId);
+        }
+
+        const userConnectionsId = userDocument.userConnectionsId;
+
+        if(!userConnectionsId) {
+
+            return await this.createUserConnectionsInOwnSession(userDocument, { holderUserId: userId });
+        }
+        
+        return await UserConnectionsInfoModel.findById(userConnectionsId);
+    }
+
+    async createUserConnectionsInOwnSession(userDocument, userConncectionsData) {
+
+        const session = await mongoose.startSession();
+
+        session.startTransaction();
+
+        try {
+
+            const userConnectionsDocument = await this.createUserConnections(userDocument, userConncectionsData, session)
+
+            await session.commitTransaction();
+
+            return userConnectionsDocument;
+        
+        } catch (error) {
+
+            await session.abortTransaction();
+
+            throw ApiError.SessionError(error);
+        
+        } finally {
+            
+            session.endSession();
+        }
+    }
+
+    async createUserConnections(userDocument, userConncectionsData, session) {
+
+        const userConnectionsModelInstance = new UserConnectionsInfoModel(userConncectionsData);
+        
+        const userConnectionsDocument = await userConnectionsModelInstance.save({ session });
+
+        if(!userConnectionsDocument) {
+
+            throw ApiError.SessionError('cant save user connectionsModel');
+        }
+        
+        const userConncetionsModelId = userConnectionsDocument._id.valueOf();
+
+        userDocument.userConnectionsId = userConncetionsModelId;
+
+        const updatedUserDocument = await userDocument.save({session});
+
+        if(!updatedUserDocument) {
+
+            throw ApiError.SessionError('cant update userModel');
+        }
+
+        return userConnectionsDocument;
+    }
+
+    async getUserConnectionsDtoByUserId(userId) {
+
+        const userConncectionsInfo = await this.getUserConnectionsDocumentByUserId(userId);
 
         const userConnectionsInfoDto = new UserConnectionsInfoDto(userConncectionsInfo);
 
         return userConnectionsInfoDto;
     }
 
-    async getUserConnections(userConncetionsInfo) {
+    async getUserConnectionsFilledWithUsers(userConncetionsInfo) {
 
         const userConnections = {};
 
