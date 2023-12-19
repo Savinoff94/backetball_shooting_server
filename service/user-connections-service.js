@@ -23,13 +23,13 @@ class UserConnectionsService {
 
         if(!userConnectionsId) {
 
-            return await this.createUserConnectionsInOwnSession(userDocument, { holderUserId: userId });
+            return await this.createUserConnectionsInOwnSession(userDocument);
         }
         
         return await UserConnectionsInfoModel.findById(userConnectionsId);
     }
 
-    async createUserConnectionsInOwnSession(userDocument, userConncectionsData) {
+    async createUserConnectionsInOwnSession(userDocument, userConncectionsData = {}) {
 
         const session = await mongoose.startSession();
 
@@ -37,7 +37,7 @@ class UserConnectionsService {
 
         try {
 
-            const userConnectionsDocument = await this.createUserConnections(userDocument, userConncectionsData, session)
+            const userConnectionsDocument = await this.createUserConnections(userDocument, session, userConncectionsData)
 
             await session.commitTransaction();
 
@@ -55,7 +55,7 @@ class UserConnectionsService {
         }
     }
 
-    async createUserConnections(userDocument, userConncectionsData, session) {
+    async createUserConnections(userDocument, session, userConncectionsData = {}) {
 
         const userConnectionsModelInstance = new UserConnectionsInfoModel(userConncectionsData);
         
@@ -65,8 +65,8 @@ class UserConnectionsService {
 
             throw ApiError.SessionError('cant save user connectionsModel');
         }
-        
-        const userConncetionsModelId = userConnectionsDocument._id.valueOf();
+
+        userDocument.userConnectionsId = userConnectionsDocument._id.valueOf();
 
         userDocument.userConnectionsId = userConncetionsModelId;
 
@@ -89,7 +89,7 @@ class UserConnectionsService {
         return userConnectionsInfoDto;
     }
 
-    async getUserConnectionsFilledWithUsers(userConncetionsInfo) {
+    async getUserConnectionsFilledWithUsersDtos(userConncetionsInfo) {
 
         const userConnections = {};
 
