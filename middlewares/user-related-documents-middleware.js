@@ -10,7 +10,7 @@ module.exports = async function(req,res,next) {
         const userData = await req.user;
         const userId = userData.id;
 
-        await userServise.createUserRelatedDocuments(UserModel.findById(userId));
+        await userServise.createUserRelatedDocuments(await UserModel.findById(userId));
         
         next()
 
