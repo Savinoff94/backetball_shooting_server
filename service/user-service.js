@@ -1,11 +1,16 @@
 const UserModel = require('../models/user-model');
+const UserConnectionsModel = require('../models/user-connections-info-model');
+const UserSimpleStatsModel = require('../models/user-simple-stats-model');
 const bcrypt = require('bcrypt');
 const uuid = require('uuid');
 const mailService = require('./mail-service');
 const tokenService = require('./token-service');
 const UserDto = require('../dtos/user-dto');
+const UserReferencesDTO = require('../dtos/user-references-dto');
 const ApiError = require('../exeptions/api-error');
 const UserSimpleStatsDto = require('../dtos/user-simple-stats-dto');
+const SimpleStatsModel = require('../models/user-simple-stats-model');
+const { default: mongoose } = require('mongoose');
 
 
 class UserServise {
@@ -32,6 +37,9 @@ class UserServise {
         const userDto = new UserDto(user);
         const tokens = tokenService.generateTokens({...userDto});
         await tokenService.saveToken(userDto.id, tokens.refreshToken);
+
+        
+        await this.createUserRelatedDocuments(user);
 
         return {...tokens, user:userDto}
     }
@@ -171,6 +179,56 @@ class UserServise {
         });
 
         return result;
+    }
+
+    async getUserReferencesDTO(userId) {
+
+        const userModel = await UserModel.findById(userId);
+
+        return UserReferencesDTO(userModel);
+    }
+
+    
+    async createUserRelatedDocuments(userDocument) {
+
+        const session = await mongoose.startSession();
+
+        session.startTransaction();
+
+        try {
+
+            if(!userDocument.userConnectionsId) {
+
+                const userConnectionsInctance = new UserConnectionsModel({});
+
+                await userConnectionsInctance.save({session});
+
+                userDocument.userConnectionsId = userConnectionsInctance._id.valueOf()
+            }
+
+            if(!userDocument.userSimpleStatsId) {
+                
+                const userSimpleStatsInstance = new UserSimpleStatsModel({});
+
+                await userSimpleStatsInstance.save({session});
+
+                userDocument.userSimpleStatsId = userSimpleStatsInstance._id.valueOf()
+            }
+
+            await userDocument.save({session});
+
+            await session.commitTransaction();
+
+        } catch (error) {
+
+            await session.abortTransaction();
+
+            throw ApiError.SessionError(error);
+        }
+        finally {
+            
+            await session.endSession();
+        }
     }
 }
 

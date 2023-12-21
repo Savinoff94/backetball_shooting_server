@@ -68,8 +68,6 @@ class UserConnectionsService {
 
         userDocument.userConnectionsId = userConnectionsDocument._id.valueOf();
 
-        userDocument.userConnectionsId = userConncetionsModelId;
-
         const updatedUserDocument = await userDocument.save({session});
 
         if(!updatedUserDocument) {

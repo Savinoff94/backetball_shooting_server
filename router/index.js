@@ -21,7 +21,7 @@ router.get('/refresh', userController.refresh);
 router.post('/getTrainingSquadList', authMiddleware, userConnectionsController.getTrainingSquadList);
 
 router.post('/searchUsers', authMiddleware, userController.searchUsers);
-router.post('/getUserConnections', authMiddleware, userConnectionsController.getUserConnections);
+router.post('/getUserConnections', authMiddleware, userRelatedDocumentsMiddleware, userConnectionsController.getUserConnections);
 
 router.post('/friendRequest', authMiddleware, userConnectionsController.friendRequest);
 router.post('/cancelFriendRequest', authMiddleware, userConnectionsController.cancelFriendRequest);
