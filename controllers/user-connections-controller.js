@@ -47,8 +47,8 @@ class UserConnectionsController {
             const userId = userData.id;
             const {ids} = req.body;
 
-            const userConnectionsInfo = await userConnectionsService.getUserConnectionsInfoByUserId(userId);
-            await userConnectionsService.friendRequest(userConnectionsInfo, ids, userId, session);
+
+            await userConnectionsService.friendRequest(userId, ids, {session})
             await userConnectionsService.friendRequestSideEffect(userId, ids, session);
 
             await session.commitTransaction();
@@ -76,7 +76,7 @@ class UserConnectionsController {
             const {ids} = req.body;
             
             
-            const userConnectionsInfo = await userConnectionsService.getUserConnectionsInfoByUserId(userId);
+            await userConnectionsService.cancelFriendRequest(userId, ids, {session});
             await userConnectionsService.cancelFriendRequest(userConnectionsInfo, ids, userId, session);
             await userConnectionsService.cancelFriendRequestSideEffect(userId, ids, session);
 
@@ -105,7 +105,7 @@ class UserConnectionsController {
             const {ids} = req.body;
             
             
-            const userConnectionsInfo = await userConnectionsService.getUserConnectionsInfoByUserId(userId);
+            await userConnectionsService.approveFriendRequest(userId, ids, {session});
             await userConnectionsService.approveFriendRequest(userConnectionsInfo, ids, userId, session);
             await userConnectionsService.approveFriendRequestSideEffect(userId, ids, session);
 
@@ -134,7 +134,7 @@ class UserConnectionsController {
             const {ids} = req.body;
             
             
-            const userConnectionsInfo = await userConnectionsService.getUserConnectionsInfoByUserId(userId);
+            await userConnectionsService.disapproveFriendRequest(userId, ids, {session});
             await userConnectionsService.disapproveFriendRequest(userConnectionsInfo, ids, userId, session);
             await userConnectionsService.disapproveFriendRequestSideEffect(userId, ids, session);
 
@@ -163,8 +163,8 @@ class UserConnectionsController {
             const {ids} = req.body;
             
             
-            const userConnectionsInfo = await userConnectionsService.getUserConnectionsInfoByUserId(userId);
-            await userConnectionsService.removeFriendRequest(userConnectionsInfo, ids, userId, session);
+            await userConnectionsService.removeFriendRequest(userId, ids, {session});
+            await userConnectionsService.removeFriendRequestSideEffect(userId, ids, session);
             await userConnectionsService.removeFriendRequestSideEffect(userId, ids, session, session);
 
             await session.commitTransaction();

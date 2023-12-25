@@ -108,177 +108,204 @@ class UserConnectionsService {
         return userConnections;
     }
 
-    removeUsersIdsFromConnectionsCategory(connectionsCategoryName, usersIds, userConncectionsInfo) {
+    removeUsersIdsFromConnectionsCategory(connectionsCategoryName, usersIds, userConncectionsDocument) {
 
-        if(!(connectionsCategoryName in userConncectionsInfo)) {
+        const connectionsCategoryIds = userConncectionsDocument.get(connectionsCategoryName);
+
+        if(!connectionsCategoryIds) {
 
             throw ApiError.BadRequest('wrong user connection category:' + connectionsCategoryName);
         }
 
-        const filteredIds = userConncectionsInfo[connectionsCategoryName].filter((userId) => !usersIds.includes(userId));
+        const filteredIds = connectionsCategoryIds.filter((userId) => !usersIds.includes(userId));
 
-        userConncectionsInfo[connectionsCategoryName] = filteredIds;
+        userConncectionsDocument[connectionsCategoryName] = filteredIds
     }
 
-    addUserIdsToConnectionsCategory(connectionsCategoryName, usersIds, userConncectionsInfo) {
+    
 
-        if(!(connectionsCategoryName in userConncectionsInfo)) {
+    addUserIdsToConnectionsCategory(connectionsCategoryName, usersIds, userConncectionsDocument) {
+
+        const connectionsCategoryIds = userConncectionsDocument.get(connectionsCategoryName);
+
+        if(!connectionsCategoryIds) {
 
             throw ApiError.BadRequest('wrong user connection category:' + connectionsCategoryName);
         }
-
-        const connectionsCategoryIds = userConncectionsInfo[connectionsCategoryName];
 
         const mergedIdsSet = new Set([...connectionsCategoryIds, ...usersIds]);
 
-        userConncectionsInfo[connectionsCategoryName] = Array.from(mergedIdsSet);
+        userConncectionsDocument[connectionsCategoryName] = Array.from(mergedIdsSet)
     }
 
 
-    async friendRequest(userConnectionsInfo, usersIds, holderUserId, session = null) {
+    async friendRequest(userId, ids, saveParameters = {}) {
 
-        this.addUserIdsToConnectionsCategory('pendingThisUsersFriendRequests', usersIds, userConnectionsInfo);
+        const userConncectionsDocument = await this.getUserConnectionsDocumentByUserId(userId);
 
-        await this.saveUserConnectionsInfo(userConnectionsInfo, holderUserId, session);
+        this.addUserIdsToConnectionsCategory('pendingThisUsersFriendRequests', ids, userConncectionsDocument);
+
+        await userConncectionsDocument.save(saveParameters)
     }
-    async friendRequestSideEffect(userIdCausedSideEffect, userIdsUnderSideEffect, session = null) {
+    async friendRequestSideEffect(userIdCausedSideEffect, userIdsUnderSideEffect, session) {
 
-        for(const userIdUnderSideEffect of userIdsUnderSideEffect) {
+        const friendRequestPromises = userIdsUnderSideEffect.map(async(userIdUnderSideEffect) => {
 
-            const userConnectionsInfo = await this.getUserConnectionsInfoByUserId(userIdUnderSideEffect);
+            const userConnectionsDocument = await this.getUserConnectionsDocumentByUserId(userIdUnderSideEffect);
 
-            await this.onUserGetFriendRequest(userConnectionsInfo, [userIdCausedSideEffect], userIdUnderSideEffect, session);
-        }
+            if(!userConnectionsDocument) {
 
+                throw ApiError.BadRequest('wrong user id:' + userIdUnderSideEffect);
+            }
+
+            return this.onUserGetFriendRequest(userConnectionsDocument, [userIdCausedSideEffect], session);
+        });
+
+        await Promise.all(friendRequestPromises)
     }
-    async onUserGetFriendRequest(userConnectionsInfo, usersIds, holderUserId, session = null) {
+    async onUserGetFriendRequest(userConncectionsDocument, usersIds, session) {
 
-        this.addUserIdsToConnectionsCategory('pendingOtherUsersFriendRequests', usersIds, userConnectionsInfo);
+        this.addUserIdsToConnectionsCategory('pendingOtherUsersFriendRequests', usersIds, userConncectionsDocument);
 
-        await this.saveUserConnectionsInfo(userConnectionsInfo, holderUserId, session);
+        await userConncectionsDocument.save({session})
     }
 
     //user cancells his own friend request
-    async cancelFriendRequest(userConnectionsInfo, usersIds, holderUserId, session = null) {
+    async cancelFriendRequest(userId, usersIds, saveParameters = {}) {
 
-        this.removeUsersIdsFromConnectionsCategory('pendingThisUsersFriendRequests', usersIds, userConnectionsInfo);
+        const userConncectionsDocument = await this.getUserConnectionsDocumentByUserId(userId);
 
-        await this.saveUserConnectionsInfo(userConnectionsInfo, holderUserId, session);
+        this.removeUsersIdsFromConnectionsCategory('pendingThisUsersFriendRequests', usersIds, userConncectionsDocument);
+
+        await userConncectionsDocument.save(saveParameters)
     }
-    async cancelFriendRequestSideEffect(userIdCausedSideEffect, userIdsUnderSideEffect, session = null) {
+    async cancelFriendRequestSideEffect(userIdCausedSideEffect, userIdsUnderSideEffect, session) {
 
-        for(const userIdUnderSideEffect of userIdsUnderSideEffect) {
+        const cancelFriendRequestPromises = userIdsUnderSideEffect.map(async(userIdUnderSideEffect) => {
 
-            const userConnectionsInfo = await this.getUserConnectionsInfoByUserId(userIdUnderSideEffect);
+            const userConnectionsDocument = await this.getUserConnectionsDocumentByUserId(userIdUnderSideEffect);
 
-            await this.onUserGetFriendRequestCancelled(userConnectionsInfo, [userIdCausedSideEffect], userIdUnderSideEffect, session);
-        }
+            if(!userConnectionsDocument) {
 
+                throw ApiError.BadRequest('wrong user id:' + userIdUnderSideEffect);
+            }
+
+            return this.onUserGetFriendRequestCancelled(userConnectionsDocument, [userIdCausedSideEffect], session);
+        });
+
+        await Promise.all(cancelFriendRequestPromises)
     }
-    async onUserGetFriendRequestCancelled(userConnectionsInfo, usersIds, holderUserId, session = null) {
+    async onUserGetFriendRequestCancelled(userConnectionsDocument, usersIds, session) {
 
-        this.removeUsersIdsFromConnectionsCategory('pendingOtherUsersFriendRequests', usersIds, userConnectionsInfo);
+        this.removeUsersIdsFromConnectionsCategory('pendingOtherUsersFriendRequests', usersIds, userConnectionsDocument);
 
-        await this.saveUserConnectionsInfo(userConnectionsInfo, holderUserId, session);
+        await userConnectionsDocument.save({session})
     }
 
 
-    async approveFriendRequest(userConnectionsInfo, usersIds, holderUserId, session = null) {
+    async approveFriendRequest(userId, usersIds, saveParameters = {}) {
 
-        this.removeUsersIdsFromConnectionsCategory('pendingOtherUsersFriendRequests', usersIds, userConnectionsInfo);
-        this.addUserIdsToConnectionsCategory('friends', usersIds, userConnectionsInfo);
+        const userConncectionsDocument = await this.getUserConnectionsDocumentByUserId(userId);
 
-        await this.saveUserConnectionsInfo(userConnectionsInfo, holderUserId, session);
+        this.removeUsersIdsFromConnectionsCategory('pendingOtherUsersFriendRequests', usersIds, userConncectionsDocument);
+        this.addUserIdsToConnectionsCategory('friends', usersIds, userConncectionsDocument);
+
+        await userConncectionsDocument.save(saveParameters)
     }
-    async approveFriendRequestSideEffect(userIdCausedSideEffect, userIdsUnderSideEffect, session = null) {
+    async approveFriendRequestSideEffect(userIdCausedSideEffect, userIdsUnderSideEffect, session) {
 
-        for(const userIdUnderSideEffect of userIdsUnderSideEffect) {
+        const friendAprrovePromises = userIdsUnderSideEffect.map((async(userIdUnderSideEffect) => {
 
-            const userConnectionsInfo = await this.getUserConnectionsInfoByUserId(userIdUnderSideEffect);
+            const userConnectionsDocument = await this.getUserConnectionsDocumentByUserId(userIdUnderSideEffect, session);
 
-            await this.onUserFriendRequestApproval(userConnectionsInfo, [userIdCausedSideEffect], userIdUnderSideEffect, session);
-        }
+            if(!userConnectionsDocument) {
+
+                throw ApiError.BadRequest('wrong user id:' + userIdUnderSideEffect);
+            }
+
+            return this.onUserFriendRequestApproval(userConnectionsDocument, [userIdCausedSideEffect], session);
+        }))
+
+        await Promise.all(friendAprrovePromises);
     }
-    async onUserFriendRequestApproval(userConnectionsInfo, usersIds, holderUserId, session = null) {
+    async onUserFriendRequestApproval(userConnectionsDocument, usersIds, session) {
 
-        this.removeUsersIdsFromConnectionsCategory('pendingThisUsersFriendRequests', usersIds, userConnectionsInfo);
-        this.addUserIdsToConnectionsCategory('friends', usersIds, userConnectionsInfo);
+        this.removeUsersIdsFromConnectionsCategory('pendingThisUsersFriendRequests', usersIds, userConnectionsDocument, {session});
+        this.addUserIdsToConnectionsCategory('friends', usersIds, userConnectionsDocument, {session});
 
-        await this.saveUserConnectionsInfo(userConnectionsInfo, holderUserId, session);
+        await userConnectionsDocument.save({session})
     }
     
 
-    async disapproveFriendRequest(userConnectionsInfo, usersIds, holderUserId, session = null) {
+    async disapproveFriendRequest(userId, usersIds, saveParameters = {}) {
 
-        this.removeUsersIdsFromConnectionsCategory('pendingOtherUsersFriendRequests', usersIds, userConnectionsInfo);
+        const userConncectionsDocument = await this.getUserConnectionsDocumentByUserId(userId);
 
-        await this.saveUserConnectionsInfo(userConnectionsInfo, holderUserId, session);
+        this.removeUsersIdsFromConnectionsCategory('pendingOtherUsersFriendRequests', usersIds, userConncectionsDocument, saveParameters);
+
+        await userConncectionsDocument.save(saveParameters)
     }
-    async disapproveFriendRequestSideEffect(userIdCausedSideEffect, userIdsUnderSideEffect, session = null) {
+    async disapproveFriendRequestSideEffect(userIdCausedSideEffect, userIdsUnderSideEffect, session) {
 
-        for(const userIdUnderSideEffect of userIdsUnderSideEffect) {
+        const disapproveFriendRequestPromises = userIdsUnderSideEffect.map(async(userIdUnderSideEffect) => {
 
-            const userConnectionsInfo = await this.getUserConnectionsInfoByUserId(userIdUnderSideEffect);
+            const userConnectionsDocument = await this.getUserConnectionsDocumentByUserId(userIdUnderSideEffect, session);
 
-            await this.onUserDisapprovalFriendRequest(userConnectionsInfo, [userIdCausedSideEffect], userIdUnderSideEffect, session);
-        }
+            if(!userConnectionsDocument) {
+
+                throw ApiError.BadRequest('wrong user id:' + userIdUnderSideEffect);
+            }
+
+            return this.onUserDisapprovalFriendRequest(userConnectionsDocument, [userIdCausedSideEffect], session);
+        })
+
+        await Promise.all(disapproveFriendRequestPromises)
     }
-    async onUserDisapprovalFriendRequest(userConnectionsInfo, usersIds, holderUserId, session = null) {
+    async onUserDisapprovalFriendRequest(userConnectionsDocument, usersIds, session) {
 
-        this.removeUsersIdsFromConnectionsCategory('pendingThisUsersFriendRequests', usersIds, userConnectionsInfo);
+        this.removeUsersIdsFromConnectionsCategory('pendingThisUsersFriendRequests', usersIds, userConnectionsDocument);
 
-        await this.saveUserConnectionsInfo(userConnectionsInfo, holderUserId, session);
+        await userConnectionsDocument.save({session})
     }
 
     // remove already added friend
-    async removeFriendRequest(userConnectionsInfo, usersIds, holderUserId, session = null) {
+    async removeFriendRequest(userId, usersIds, saveParameters = {}) {
 
-        this.removeUsersIdsFromConnectionsCategory('friends', usersIds, userConnectionsInfo);
+        const userConncectionsDocument = await this.getUserConnectionsDocumentByUserId(userId);
 
-        await this.saveUserConnectionsInfo(userConnectionsInfo, holderUserId, session);
+        this.removeUsersIdsFromConnectionsCategory('friends', usersIds, userConncectionsDocument);
+
+        await userConncectionsDocument.save(saveParameters)
     }
-    async removeFriendRequestSideEffect(userIdCausedSideEffect, userIdsUnderSideEffect, session = null) {
+    async removeFriendRequestSideEffect(userIdCausedSideEffect, userIdsUnderSideEffect, session) {
 
-        for(const userIdUnderSideEffect of userIdsUnderSideEffect) {
+        const removeFriendRequestPromises = await userIdsUnderSideEffect.map(async(userIdUnderSideEffect) => {
 
-            const userConnectionsInfo = await this.getUserConnectionsInfoByUserId(userIdUnderSideEffect);
+            const userConnectionsDocument = await this.getUserConnectionsDocumentByUserId(userIdUnderSideEffect);
 
-            await this.onUserRemoveFriendRequest(userConnectionsInfo, [userIdCausedSideEffect], userIdUnderSideEffect, session);
+            if(!userConnectionsDocument) {
+
+                throw ApiError.BadRequest('wrong user id:' + userIdUnderSideEffect);
         }
-    }
-    async onUserRemoveFriendRequest(userConnectionsInfo, usersIds, holderUserId, session = null) {
-
-        this.removeUsersIdsFromConnectionsCategory('friends', usersIds, userConnectionsInfo);
-
-        await this.saveUserConnectionsInfo(userConnectionsInfo, holderUserId, session);
-    }
-
-
-    async saveUserConnectionsInfo(userConnectionsInfo, holderUserId, session = null) {
-
-        if(session) {
-
-            if(!userConnectionsInfo['holderUserId']) {
-
-                await UserConnectionsInfoModel.create([{...userConnectionsInfo,holderUserId: holderUserId}], {session});
-    
-                return;
-            }
-    
-            await UserConnectionsInfoModel.findOneAndUpdate({holderUserId: holderUserId}, {...userConnectionsInfo}).session(session);
-
         }
         else {
 
             if(!userConnectionsInfo['holderUserId']) {
-
-                await UserConnectionsInfoModel.create([{...userConnectionsInfo,holderUserId: holderUserId}]);
-    
-                return;
             }
-    
-            await UserConnectionsInfoModel.findOneAndUpdate({holderUserId: holderUserId}, {...userConnectionsInfo});
-        }
+        else {
+
+            if(!userConnectionsInfo['holderUserId']) {
+            
+            return this.onUserRemoveFriendRequest(userConnectionsDocument, [userIdCausedSideEffect], session);
+        });
+
+        await Promise.all(removeFriendRequestPromises);
+    }
+    async onUserRemoveFriendRequest(userConnectionsDocument, usersIds, session) {
+
+        this.removeUsersIdsFromConnectionsCategory('friends', usersIds, userConnectionsDocument);
+
+        await userConnectionsDocument.save({session})
     }
 }
 
