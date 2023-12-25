@@ -286,15 +286,7 @@ class UserConnectionsService {
             if(!userConnectionsDocument) {
 
                 throw ApiError.BadRequest('wrong user id:' + userIdUnderSideEffect);
-        }
-        }
-        else {
-
-            if(!userConnectionsInfo['holderUserId']) {
             }
-        else {
-
-            if(!userConnectionsInfo['holderUserId']) {
             
             return this.onUserRemoveFriendRequest(userConnectionsDocument, [userIdCausedSideEffect], session);
         });
