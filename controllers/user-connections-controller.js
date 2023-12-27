@@ -194,13 +194,23 @@ class UserConnectionsController {
 
             const userId = userData.id;
 
-            const userConnectionsInfo = await userConnectionsService.getUserConnectionsInfoByUserId(userId);
+            const userConnectionsInfo = await userConnectionsService.getUserConnectionsDocumentByUserId(userId);
 
             const trainingSquadIds = [...userConnectionsInfo['friends'], userId];
 
-            const trainingSquadUsersMap = await userService.getUsersById(trainingSquadIds);
+            const usersDocuments = await userService.getUsersDocumentsById(trainingSquadIds);
 
-            const trainingSquadList = await userStatsService.fillSimpleStatsInUsers(trainingSquadUsersMap)
+            const {userDtosMap, userReferencesDtosMap} = userService.getEveryUserDtoMap(usersDocuments)
+            const userSimpleStatsDtosMap = await userStatsService.getSimpleStatsByUserReferenceDtoMap(userReferencesDtosMap);
+
+            const trainingSquadList = {};
+
+            trainingSquadIds.forEach((trainingPossibleParticipantId) => {
+
+                userService.fillUserInfoFromDto(trainingSquadList, trainingPossibleParticipantId, userDtosMap, userSimpleStatsDtosMap)
+            })
+
+            
 
             return res.json(trainingSquadList);
             
