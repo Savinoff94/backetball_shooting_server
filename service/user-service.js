@@ -114,6 +114,13 @@ class UserServise {
 
         const regex = new RegExp(`^${login}`, 'i') 
 
+        return await UserModel.find({login: {$regex: regex}});
+    }
+
+    async getUsersDtosByLogin(login) {
+
+        const regex = new RegExp(`^${login}`, 'i') 
+
         const users = await UserModel.find({login: {$regex: regex}});
 
         const usersDtos = this.getUsersDtosMap(users);

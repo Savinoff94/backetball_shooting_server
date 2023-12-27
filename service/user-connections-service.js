@@ -299,6 +299,14 @@ class UserConnectionsService {
 
         await userConnectionsDocument.save({session})
     }
+
+    async getAllConncetedUsersIds(userId) {
+
+        const userConnectionsDto = await this.getUserConnectionsDtoByUserId(userId);
+        const allConncectedUsersIds = [].concat(...Object.values(userConnectionsDto));
+
+        return allConncectedUsersIds;
+    }
 }
 
 module.exports = new UserConnectionsService();

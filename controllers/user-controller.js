@@ -1,6 +1,7 @@
 const ApiError = require('../exeptions/api-error');
 const userServise = require('../service/user-service');
 const userStatsService = require('../service/user-stats-service');
+const userConnectionsService = require('../service/user-connections-service');
 const {validationResult} = require('express-validator');
 
 class UserController {
@@ -78,16 +79,30 @@ class UserController {
         try {
 
             const {login} = req.body;
-
             const currentUserInfo = await req.user;
-            
-            const users = await userServise.getUsersByLogin(login);
+            const usersDocuments = await userServise.getUsersByLogin(login);
 
-            delete users[currentUserInfo.id];
+            const connectedUsersIds = [...await userConnectionsService.getAllConncetedUsersIds(currentUserInfo.id), currentUserInfo.id]
 
-            const usersWithSimpleStats = await userStatsService.fillSimpleStatsInUsers(users);
+            const filteredUserDocuments = usersDocuments.filter((userDocument) => {
 
-            return res.json(usersWithSimpleStats);
+                const currentUserDocumentId = userDocument['_id'].valueOf();
+
+                return !connectedUsersIds.includes(currentUserDocumentId);
+            })
+
+            const {userDtosMap, userReferencesDtosMap} = userServise.getEveryUserDtoMap(filteredUserDocuments)
+            const userSimpleStatsDtosMap = await userStatsService.getSimpleStatsByUserReferenceDtoMap(userReferencesDtosMap);
+            const usersIds = Object.keys(userDtosMap);
+
+            const result = {};
+
+            usersIds.forEach((userId) => {
+
+                userServise.fillUserInfoFromDto(result, userId, userDtosMap, userSimpleStatsDtosMap)
+            })
+
+            return res.json(result);
 
         } catch (error) {
             

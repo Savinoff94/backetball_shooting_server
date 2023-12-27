@@ -35,7 +35,7 @@ class UserConnectionsController {
             
                 const currentConnectionTypeIds = userConnectionsDto[userConncetionType]
 
-                currentConnectionTypeIds.forEach((currentConnectionTypeId) => userService.fillUserInfoFromDto(result[userConncetionType], currentConnectionTypeId, userDtosMap, userSimpleStatsDtosMap))
+                currentConnectionTypeIds.forEach((currentConnectionTypeUserId) => userService.fillUserInfoFromDto(result[userConncetionType], currentConnectionTypeUserId, userDtosMap, userSimpleStatsDtosMap))
             }
 
             return res.json(result);
