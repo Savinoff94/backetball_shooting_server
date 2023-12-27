@@ -2,6 +2,7 @@ const Router = require('express').Router;
 const userController = require('../controllers/user-controller');
 const {body} = require('express-validator');
 const authMiddleware = require('../middlewares/auth-middleware');
+const userRelatedDocumentsMiddleware = require('../middlewares/user-related-documents-middleware');
 const userConnectionsController = require('../controllers/user-connections-controller');
 
 

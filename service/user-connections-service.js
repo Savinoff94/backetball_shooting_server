@@ -102,7 +102,7 @@ class UserConnectionsService {
 
             const currentTypeUserIds = userConncetionsInfo[userConncetionType];
 
-            userConnections[userConncetionType] = await userService.getUsersById(currentTypeUserIds);
+            userConnections[userConncetionType] = await userService.getUsersDtosById(currentTypeUserIds);
         }
 
         return userConnections;

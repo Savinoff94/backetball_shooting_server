@@ -40,6 +40,33 @@ class UserStatsService {
 
         return usersWithSimpleStats;
     }
+
+    async getUserSimpleStatsDto(simpleStatsId) {
+    
+        const userSimpleStatsDocument = await UserSimpleStatsModel.findById(simpleStatsId);
+
+        const userSimpleStatsDto = new UserSimpleStatsDto(userSimpleStatsDocument);
+        
+        return userSimpleStatsDto;
+    }
+
+    async getSimpleStatsByUserReferenceDtoMap(userReferenceDtoMap) {
+
+        const result = {};
+
+        const usersIds = Object.keys(userReferenceDtoMap);
+
+        for(const userId of usersIds) {
+
+            const userReferencesDto = userReferenceDtoMap[userId];
+
+            const {userSimpleStatsId} = userReferencesDto;
+
+            result[userId] = await this.getUserSimpleStatsDto(userSimpleStatsId);
+        }
+
+        return result;
+    }
 }
 
 module.exports = new UserStatsService();

@@ -4,33 +4,44 @@ const userService = require('../service/user-service');
 const { default: mongoose } = require('mongoose');
 
 class UserConnectionsController {
-    
+
     //filled with users info
     async getUserConnections(req,res,next) {
 
-        try{
+        try {
 
             const userData = await req.user;
 
             const userId = userData.id;
 
             const userConnectionsDto = await userConnectionsService.getUserConnectionsDtoByUserId(userId);
-            
-            const userConnections = await userConnectionsService.getUserConnectionsFilledWithUsersDtos(userConnectionsDto);
- 
-            const userConnectionsTypes = Object.keys(userConnections);
+            const allConncectedUsersIds = [].concat(...Object.values(userConnectionsDto));
+
+            const usersDocuments = await userService.getUsersDocumentsById(allConncectedUsersIds);
+
+            const {userDtosMap, userReferencesDtosMap} = userService.getEveryUserDtoMap(usersDocuments)
+
+            const userSimpleStatsDtosMap = await userStatsService.getSimpleStatsByUserReferenceDtoMap(userReferencesDtosMap);
+            const userConnectionsTypes = Object.keys(userConnectionsDto);
+
+            const result = {};
 
             for(const userConncetionType of userConnectionsTypes) {
 
-                const currentTypeConnections = userConnections[userConncetionType];
+                if(!(userConncetionType in result)) {
 
-                userConnections[userConncetionType] = await userStatsService.fillSimpleStatsInUsers(currentTypeConnections)
+                    result[userConncetionType] = {}
+                }
+            
+                const currentConnectionTypeIds = userConnectionsDto[userConncetionType]
+
+                currentConnectionTypeIds.forEach((currentConnectionTypeId) => userService.fillUserInfoFromDto(result[userConncetionType], currentConnectionTypeId, userDtosMap, userSimpleStatsDtosMap))
             }
 
-            return res.json(userConnections);
-
-        }catch(error) {
-
+            return res.json(result);
+            
+        } catch (error) {
+            
             next(error);
         }
     }
@@ -77,7 +88,6 @@ class UserConnectionsController {
             
             
             await userConnectionsService.cancelFriendRequest(userId, ids, {session});
-            await userConnectionsService.cancelFriendRequest(userConnectionsInfo, ids, userId, session);
             await userConnectionsService.cancelFriendRequestSideEffect(userId, ids, session);
 
             await session.commitTransaction();
@@ -106,7 +116,6 @@ class UserConnectionsController {
             
             
             await userConnectionsService.approveFriendRequest(userId, ids, {session});
-            await userConnectionsService.approveFriendRequest(userConnectionsInfo, ids, userId, session);
             await userConnectionsService.approveFriendRequestSideEffect(userId, ids, session);
 
             await session.commitTransaction();
@@ -135,7 +144,6 @@ class UserConnectionsController {
             
             
             await userConnectionsService.disapproveFriendRequest(userId, ids, {session});
-            await userConnectionsService.disapproveFriendRequest(userConnectionsInfo, ids, userId, session);
             await userConnectionsService.disapproveFriendRequestSideEffect(userId, ids, session);
 
             await session.commitTransaction();
@@ -165,7 +173,6 @@ class UserConnectionsController {
             
             await userConnectionsService.removeFriendRequest(userId, ids, {session});
             await userConnectionsService.removeFriendRequestSideEffect(userId, ids, session);
-            await userConnectionsService.removeFriendRequestSideEffect(userId, ids, session, session);
 
             await session.commitTransaction();
 

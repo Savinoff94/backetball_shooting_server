@@ -154,7 +154,15 @@ class UserServise {
         return result;
     }
 
-    async getUsersById(ids) {
+    async getUsersDocumentsById(ids) {
+
+        return await Promise.all(
+
+            ids.map((id) => UserModel.findById(id))
+        )
+    }
+
+    async getUsersDtosById(ids) {
 
         const users = await Promise.all(
 
@@ -229,6 +237,38 @@ class UserServise {
             
             await session.endSession();
         }
+    }
+
+    getEveryUserDtoMap(usersDocuments) {
+
+        const userDtosMap = {};
+        const userReferencesDtosMap = {};
+        
+        usersDocuments.forEach((userDocument) => {
+
+            const userDto = new UserDto(userDocument);
+
+            const userReferencesDto = new UserReferencesDTO(userDocument);
+
+            userDtosMap[userDto['id']] = userDto;
+            userReferencesDtosMap[userDto['id']] = userReferencesDto;
+        })
+
+        return {userDtosMap, userReferencesDtosMap}
+    }
+
+    fillUserInfoFromDto(data, userId, userDtosMap = {}, userSimpleStatsDtosMap = {}) {
+
+        if(userId in userDtosMap) {
+
+            data[userId] = structuredClone(userDtosMap[userId])
+        }
+        
+        if(userId in userSimpleStatsDtosMap) {
+
+            data[userId]['simpleStats'] = structuredClone(userSimpleStatsDtosMap[userId])
+        }
+        
     }
 }
 

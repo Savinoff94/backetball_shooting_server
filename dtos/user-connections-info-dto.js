@@ -16,9 +16,9 @@ module.exports = class UserConnectionsInfoDto {
             model.pendingOtherUsersFriendRequests = [];
         }
 
-        this.friends                         = model.friends;
-        this.pendingThisUsersFriendRequests  = model.pendingThisUsersFriendRequests;
-        this.pendingOtherUsersFriendRequests = model.pendingOtherUsersFriendRequests;
+        this.friends                         = [...model.friends];
+        this.pendingThisUsersFriendRequests  = [...model.pendingThisUsersFriendRequests];
+        this.pendingOtherUsersFriendRequests = [...model.pendingOtherUsersFriendRequests];
         
     }
 }
