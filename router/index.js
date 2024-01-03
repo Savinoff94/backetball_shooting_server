@@ -4,6 +4,7 @@ const {body} = require('express-validator');
 const authMiddleware = require('../middlewares/auth-middleware');
 const userRelatedDocumentsMiddleware = require('../middlewares/user-related-documents-middleware');
 const userConnectionsController = require('../controllers/user-connections-controller');
+const shootingDiaryController = require('../controllers/shooting-diary-controller');
 
 
 const router = new Router();
@@ -20,6 +21,7 @@ router.get('/activate/:link', userController.activate);
 router.get('/refresh', userController.refresh);
 
 router.post('/getTrainingSquadList', authMiddleware, userConnectionsController.getTrainingSquadList);
+router.post('/saveShootingSet', authMiddleware, shootingDiaryController.saveShootingSet);
 
 router.post('/searchUsers', authMiddleware, userController.searchUsers);
 router.post('/getUserConnections', authMiddleware, userRelatedDocumentsMiddleware, userConnectionsController.getUserConnections);
