@@ -277,6 +277,24 @@ class UserServise {
         }
         
     }
+
+    getUsersLoginsById = async(ids) => {
+
+        const result = {}
+
+        const usersDocuments = await this.getUsersDocumentsById(ids);
+
+        usersDocuments.forEach((userDocument) => {
+
+            const userId = userDocument._id.valueOf();
+
+            const userLogin = userDocument.login;
+
+            result[userId] = userLogin;
+        })
+
+        return result;
+    }
 }
 
 module.exports = new UserServise();

@@ -33,4 +33,11 @@ router.post('/disapproveFriendRequest', authMiddleware, userConnectionsControlle
 router.post('/removeFriendRequest', authMiddleware, userConnectionsController.removeFriendRequest);
 
 
+
+router.post('/getCurrentUserShootingSets', authMiddleware, shootingDiaryController.getCurrentUserShootingSets);
+router.post('/removeSet', authMiddleware, shootingDiaryController.removeSet);
+
+
+
+
 module.exports = router;
