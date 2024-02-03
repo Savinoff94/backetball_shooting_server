@@ -1,4 +1,4 @@
-const { getCurrentDateFormatted } = require("../helpers/dates");
+const { getCurrentDateFormatted, getISODateByKey, getTimeRangeAccordingKey } = require("../helpers/dates");
 const shootingDiaryService = require('../service/shooting-diary-service');
 const userServise = require('../service/user-service')
 
@@ -12,11 +12,14 @@ class ShootingDiaryController {
 
             const trainingHostId = userData.id;
 
-            const currentDateFormatted = getCurrentDateFormatted()
+            const trainingDateFormatted = getCurrentDateFormatted()
+            const trainingDateISO = getISODateByKey('current');
 
             const {shooterId, spotKey, tries, makes} = req.body;
 
-            await shootingDiaryService.saveShootingSet(shooterId, currentDateFormatted, spotKey, trainingHostId, tries, makes);
+            await shootingDiaryService.saveShootingSet(shooterId, trainingDateFormatted, spotKey, trainingHostId, tries, makes, trainingDateISO);
+            // await shootingDiaryService.saveShootingFakeData(shooterId);
+
 
             return res.sendStatus(200);
 
@@ -65,6 +68,27 @@ class ShootingDiaryController {
 
         } catch (error) {
 
+            next(error);
+        }
+    }
+
+    async getChartData(req,res,next) {
+
+        try {
+
+            const {usersIds, spotKey, timeKey, chartType} = req.body;
+
+            const spotKeysArray = shootingDiaryService.getShootingSpotsArrayToFilter(spotKey);
+
+            const timeRange = getTimeRangeAccordingKey(timeKey);
+
+            const data = await shootingDiaryService.getChartData(usersIds, spotKeysArray, timeRange, chartType);
+
+            return res.status(200).json({chartData: data});
+
+            
+        } catch (error) {
+            
             next(error);
         }
     }

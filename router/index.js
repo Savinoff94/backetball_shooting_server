@@ -32,6 +32,8 @@ router.post('/approveFriendRequest', authMiddleware, userConnectionsController.a
 router.post('/disapproveFriendRequest', authMiddleware, userConnectionsController.disapproveFriendRequest);
 router.post('/removeFriendRequest', authMiddleware, userConnectionsController.removeFriendRequest);
 
+router.post('/getChartsData', authMiddleware, shootingDiaryController.getChartData);
+
 
 
 router.post('/getCurrentUserShootingSets', authMiddleware, shootingDiaryController.getCurrentUserShootingSets);

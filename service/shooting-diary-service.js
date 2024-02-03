@@ -1,18 +1,23 @@
 const db = require('../modules/db').db;
 const ApiError = require('../exeptions/api-error');
 const TrainingSetDto = require('../dtos/training-set-dto');
+const ShootingSpotsConstants = require ('../helpers/shooting-spots-constants');
+const ChartDTOs = require('../dtos/chart-dtos');
+const {fakeShootingDataSet, fakeShootingDataSet_2, fakeShootingDataSet_3} = require('../helpers/fakeShootingSets');
+
 
 
 class ShootingDiaryService {
 
-    saveShootingSet = async (shooterId, currentDateFormatted, spotKey, trainingHostId, tries, makes) => {
+    saveShootingSet = async (shooterId, trainingDateFormatted, spotKey, trainingHostId, tries, makes, trainingDateISO) => {
 
         try {
 
             await db('basketball_shooting_diary').insert({
                 shooter_id:            shooterId,
                 spot_key:              spotKey,
-                date:                  currentDateFormatted,
+                trainingDateFormatted: trainingDateFormatted,
+                trainingDateISO:       trainingDateISO,
                 shooting_host_user_id: trainingHostId,
                 tries,
                 makes,
@@ -36,6 +41,74 @@ class ShootingDiaryService {
 
             throw ApiError.BadRequest('problems with POSTGRES: ' + error)
         }   
+    }
+
+    async getChartData(usersIds, spotKeysArray, timeRange, chartKey) {
+        
+        switch (chartKey) {
+            case 'shotsDispersionByCategory':
+                {
+                const data =  await db('basketball_shooting_diary').select('shooter_id', 'spot_key', db.raw('SUM(tries)'))
+                .whereIn('shooter_id', usersIds)
+                .whereIn('spot_key', spotKeysArray)
+                .groupBy('spot_key', 'shooter_id')
+                .whereBetween('trainingDateISO', timeRange)
+
+                return ChartDTOs.toShotsDispersionDTO(data, true)
+                }
+            case 'shotsDispersionBySpot':
+
+                {
+                const data =  await db('basketball_shooting_diary').select('shooter_id', 'spot_key', db.raw('SUM(tries)'))
+                .whereIn('shooter_id', usersIds)
+                .whereIn('spot_key', spotKeysArray)
+                .groupBy('spot_key', 'shooter_id')
+                .whereBetween('trainingDateISO', timeRange)
+                
+                return ChartDTOs.toShotsDispersionDTO(data, false);
+                }
+                
+            case 'shotsPersentageChart':
+
+                {
+                const data = await db('basketball_shooting_diary').select('shooter_id', db.raw('DATE_TRUNC(\'day\', "trainingDateISO") as truncated_date'), db.raw('SUM(tries) as sum_tries'), db.raw('SUM(makes) as sum_makes'))
+                .whereIn('shooter_id', usersIds)
+                .whereIn('spot_key', spotKeysArray)
+                .whereBetween('trainingDateISO', timeRange)
+                .groupBy( 'shooter_id', db.raw('DATE_TRUNC(\'day\', "trainingDateISO")'))
+                .orderBy('truncated_date')
+
+                return ChartDTOs.toShotsNotGroupedBySpotDTO(data)
+                }
+
+            case 'shotsAmountChart':
+                {
+                const data = await db('basketball_shooting_diary').select('shooter_id', db.raw('DATE_TRUNC(\'day\', "trainingDateISO") as truncated_date'), db.raw('SUM(tries) as sum_tries'), db.raw('SUM(makes) as sum_makes'))
+                .whereIn('shooter_id', usersIds)
+                .whereIn('spot_key', spotKeysArray)
+                .whereBetween('trainingDateISO', timeRange)
+                .groupBy( 'shooter_id', db.raw('DATE_TRUNC(\'day\', "trainingDateISO")'))
+                .orderBy('truncated_date')
+
+                return ChartDTOs.toShotsNotGroupedBySpotDTO(data)
+                }
+               
+            case 'shotsAmountAndPercentageChart':
+                {
+                const data = await db('basketball_shooting_diary').select('shooter_id', db.raw('DATE_TRUNC(\'day\', "trainingDateISO") as truncated_date'), 'spot_key', db.raw('SUM(tries) as sum_tries'), db.raw('SUM(makes) as sum_makes'))
+                .whereIn('shooter_id', usersIds)
+                .whereIn('spot_key', spotKeysArray)
+                .whereBetween('trainingDateISO', timeRange)
+                .groupBy('shooter_id', 'spot_key', db.raw('DATE_TRUNC(\'day\', "trainingDateISO")'))
+                .orderBy('truncated_date')
+                
+                return ChartDTOs.toShotsGroupedBySpotDTO(data)
+                }
+        
+            default:
+                throw new Error('wrong chartKey')
+                break;
+        }
     }
 
     removeSetById = async (setsIds) => {
@@ -72,6 +145,36 @@ class ShootingDiaryService {
             involvedUsersIds: Array.from(involvedUsersIds),
         }
     }
+
+    getShootingSpotsArrayToFilter = (shootingSpot) => {
+
+        const shootingSpotsTypes = ShootingSpotsConstants.getShootingSpotsTypes(); 
+
+        if(shootingSpot === 'all') {
+
+            return [].concat(...Object.values(shootingSpotsTypes));
+        }
+
+        if(shootingSpot in shootingSpotsTypes) {
+
+            return shootingSpotsTypes[shootingSpot]
+        }
+
+        return [shootingSpot];
+    }
+
+
+    saveShootingFakeData = async (userId) => {
+
+        const promises = fakeShootingDataSet_3.map((data) => {
+
+            const {tries, makes, spotKey, trainingDateFormatted, trainingDateISO} = data
+
+            return this.saveShootingSet(userId, trainingDateFormatted, spotKey, userId, tries, makes, trainingDateISO);
+        })
+
+        await Promise.all(promises);
+    } 
 
 }
 
