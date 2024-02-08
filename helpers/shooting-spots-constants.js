@@ -19,7 +19,7 @@ module.exports = class ShootingSpotsConstants {
     
         if(!result) {
     
-            throw new Error('there is no such spot in shootingSpotsTypes')
+            spotKey; 
         }
     
         return result[0];

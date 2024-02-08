@@ -50,7 +50,7 @@ module.exports = class ChartDTOs {
                 result[shooterId] = {};
             }
     
-            const date = convertISODateToDDMMYYYY(item['truncated_date']);
+            const date = new Date(item['truncated_date']).getTime()
     
             if(!(date in result[shooterId])) {
     
@@ -69,9 +69,7 @@ module.exports = class ChartDTOs {
         return result
     }
     
-    static toShotsGroupedBySpotDTO(data) {
-        
-        console.log('data:', data);
+    static toShotsGroupedBySpotDTO(data, isSpotToCategory = false) {
 
         const result = {};
     
@@ -85,19 +83,32 @@ module.exports = class ChartDTOs {
             }
     
             const spotKey = item['spot_key'];
+
+            if(isSpotToCategory) {
+    
+                spotKey = ShootingSpotsConstants.getSpotCategory(spotKey);
+            }
     
             if(!(spotKey in result[shooterId])) {
     
                 result[shooterId][spotKey] = {};
             }
     
-            const date = convertISODateToDDMMYYYY(item['truncated_date']);
-    
-            if(!(date in result[shooterId][spotKey])) {
-    
-                const tries = parseInt(item['sum_tries'])
-                const makes = parseInt(item['sum_makes'])
-                const percent = Math.round(makes * 100 / tries)
+            const date = new Date(item['truncated_date']).getTime()
+
+            const tries = parseInt(item['sum_tries'])
+            const makes = parseInt(item['sum_makes'])
+            const percent = Math.round(makes * 100 / tries)
+            
+            if(date in result[shooterId][spotKey]) {
+
+                result[shooterId][spotKey][date] = {
+                    tries: result[shooterId][spotKey][date] + tries,
+                    makes: result[shooterId][spotKey][date] + makes,
+                    percent: result[shooterId][spotKey][date] + percent,
+                };
+            }
+            else {
     
                 result[shooterId][spotKey][date] = {
                     tries,
