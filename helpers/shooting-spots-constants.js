@@ -19,9 +19,26 @@ module.exports = class ShootingSpotsConstants {
     
         if(!result) {
     
-            spotKey; 
+            return spotKey; 
         }
     
         return result[0];
+    }
+    
+    static translateSpotCategoryToSimpleStatCategory(spotCategory) {
+
+        switch (spotCategory) {
+            case 'threes':
+                return 'threePointers';
+            case 'freethrows':
+                return 'freethrows';
+            case 'midRange':
+            case 'shortMidRange':
+            case 'shortRange':
+                return 'twoPointers'
+        
+            default:
+                throw new Error('Wrong spot category')
+        }
     }
 }

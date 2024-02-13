@@ -67,6 +67,13 @@ class UserStatsService {
 
         return result;
     }
+
+    async getUserSimpleStatsDocument(userReferenceDto) {
+
+        const {userSimpleStatsId} = userReferenceDto;
+
+        return await UserSimpleStatsModel.findById(userSimpleStatsId);
+    }
 }
 
 module.exports = new UserStatsService();

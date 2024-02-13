@@ -111,6 +111,16 @@ class ShootingDiaryService {
         }
     }
 
+    getUserTriesAndMakesAmountBySpots = async (shooterId, spotKeysArray) => {
+
+        const data = await db('basketball_shooting_diary').select('shooter_id', db.raw('SUM(tries) as sum_tries'), db.raw('SUM(makes) as sum_makes'))
+        .where({'shooter_id': shooterId})
+        .whereIn('spot_key', spotKeysArray)
+        .groupBy('shooter_id');
+        
+        return data[0];
+    }
+
     removeSetById = async (setsIds) => {
 
         try {

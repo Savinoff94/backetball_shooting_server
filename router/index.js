@@ -5,6 +5,7 @@ const authMiddleware = require('../middlewares/auth-middleware');
 const userRelatedDocumentsMiddleware = require('../middlewares/user-related-documents-middleware');
 const userConnectionsController = require('../controllers/user-connections-controller');
 const shootingDiaryController = require('../controllers/shooting-diary-controller');
+const simpleStatsController = require('../controllers/simple-stats-controller')
 
 
 const router = new Router();
@@ -33,6 +34,8 @@ router.post('/disapproveFriendRequest', authMiddleware, userConnectionsControlle
 router.post('/removeFriendRequest', authMiddleware, userConnectionsController.removeFriendRequest);
 
 router.post('/getChartsData', authMiddleware, shootingDiaryController.getChartData);
+
+router.post('/updateUsersSimpleStats', authMiddleware, simpleStatsController.updateUsersSimpleStats);
 
 
 

@@ -200,7 +200,7 @@ class UserServise {
 
         const userModel = await UserModel.findById(userId);
 
-        return UserReferencesDTO(userModel);
+        return new UserReferencesDTO(userModel);
     }
 
     
