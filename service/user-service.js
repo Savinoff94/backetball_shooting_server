@@ -60,11 +60,11 @@ class UserServise {
     async login(login, password) {
         const user = await UserModel.findOne({login})
         if(!user) {
-            throw new ApiError.BadRequest('User with such login not found')
+            throw ApiError.BadRequest('User with such login not found', [{login:'User with such login not found'}])
         }
         const isPassEquals = await bcrypt.compare(password, user.password)
         if(!isPassEquals) {
-            throw ApiError.BadRequest('wrong password')
+            throw ApiError.BadRequest('wrong password', [{password:'wrong password'}])
         }
         const userDto = new UserDto(user);
         const tokens = tokenService.generateTokens({...userDto});
