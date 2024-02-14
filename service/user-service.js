@@ -19,12 +19,12 @@ class UserServise {
         
         let candidate = await UserModel.findOne({email});
         if(candidate) {
-            throw ApiError.BadRequest('user with email:' + email + ' already exists');
+            throw ApiError.BadRequest('user with email:' + email + ' already exists', [{email:'user with email:' + email + ' already exists'}]);
         }
 
         candidate = await UserModel.findOne({login});
         if(candidate) {
-            throw ApiError.BadRequest('user with login:' + login + ' already exists');
+            throw ApiError.BadRequest('user with login:' + login + ' already exists', [{login:'user with login:' + login + ' already exists'}]);
         }
 
         const hashPassword = await bcrypt.hash(password, 3);
