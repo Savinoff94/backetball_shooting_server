@@ -29,18 +29,29 @@ class ShootingDiaryService {
         }
     }
 
-    getShootingSets = async (usersIdsArray, whereParams = {}) => {
+    getShootingSets = async (usersIdsArray, offset = 0, limit = 15, whereParams = {}) => {
         
         try {
             return await db('basketball_shooting_diary').select('*')
             .whereIn('shooter_id', usersIdsArray)
             .where(whereParams)
             .orderBy('created_at')
+            .offset(offset)
+            .limit(limit)
 
         } catch (error) {
 
             throw ApiError.BadRequest('problems with POSTGRES: ' + error)
         }   
+    }
+
+    countShootingSets = async ( whereParams = {}) => {
+
+        try {
+            return await db('basketball_shooting_diary').count('shooting_rep_id as count').where(whereParams);
+        } catch (error) {
+            throw ApiError.BadRequest('problems with POSTGRES: ' + error)
+        }
     }
 
     async getChartData(usersIds, spotKeysArray, timeRange, chartKey) {

@@ -37,8 +37,15 @@ class ShootingDiaryController {
 
             const userData = await req.user;
             const currentUserId = userData.id;
+            const {page} = req.body;
 
-            const shootingSets = await shootingDiaryService.getShootingSets([currentUserId]);
+            const setsDisplayedOnPage = 10;
+            const offset = page * setsDisplayedOnPage;
+            const limit = setsDisplayedOnPage;
+
+            const amountShootingSets = await shootingDiaryService.countShootingSets({'shooter_id': currentUserId});
+            const shootingSets = await shootingDiaryService.getShootingSets([currentUserId], offset, limit);
+
             const {sets, involvedUsersIds} = shootingDiaryService.getShootingSetsDtosWithInfo(shootingSets);
 
             //detete, because i dont want to read this user once again
@@ -47,7 +54,7 @@ class ShootingDiaryController {
             const usersLoginsMap = await userServise.getUsersLoginsById(involvedUsersIds);
             usersLoginsMap[currentUserId] = userData.login
 
-            return res.status(200).json({sets: sets, userIdLoginMap:usersLoginsMap});
+            return res.status(200).json({sets: sets, userIdLoginMap:usersLoginsMap, pages: Math.ceil(amountShootingSets[0]['count'] / setsDisplayedOnPage)});
 
         } catch (error) {
             
