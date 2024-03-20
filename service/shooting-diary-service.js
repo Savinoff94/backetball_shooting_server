@@ -9,11 +9,13 @@ const {fakeShootingDataSet, fakeShootingDataSet_2, fakeShootingDataSet_3} = requ
 
 class ShootingDiaryService {
 
+    dbName = 'basketball_shooting_diary';
+
     saveShootingSet = async (shooterId, trainingDateFormatted, spotKey, trainingHostId, tries, makes, trainingDateISO) => {
 
         try {
 
-            await db('basketball_shooting_diary').insert({
+            await db(this.dbName).insert({
                 shooter_id:            shooterId,
                 spot_key:              spotKey,
                 trainingDateFormatted: trainingDateFormatted,
@@ -32,7 +34,7 @@ class ShootingDiaryService {
     getShootingSets = async (usersIdsArray, offset = 0, limit = 15, whereParams = {}) => {
         
         try {
-            return await db('basketball_shooting_diary').select('*')
+            return await db(this.dbName).select('*')
             .whereIn('shooter_id', usersIdsArray)
             .where(whereParams)
             .orderBy('created_at')
@@ -48,7 +50,7 @@ class ShootingDiaryService {
     countShootingSets = async ( whereParams = {}) => {
 
         try {
-            return await db('basketball_shooting_diary').count('shooting_rep_id as count').where(whereParams);
+            return await db(this.dbName).count('shooting_rep_id as count').where(whereParams);
         } catch (error) {
             throw ApiError.BadRequest('problems with POSTGRES: ' + error)
         }
@@ -59,7 +61,7 @@ class ShootingDiaryService {
         switch (chartKey) {
             case 'shotsDispersionByCategory':
                 {
-                const data =  await db('basketball_shooting_diary').select('shooter_id', 'spot_key', db.raw('SUM(tries)'))
+                const data =  await db(this.dbName).select('shooter_id', 'spot_key', db.raw('SUM(tries)'))
                 .whereIn('shooter_id', usersIds)
                 .whereIn('spot_key', spotKeysArray)
                 .groupBy('spot_key', 'shooter_id')
@@ -70,7 +72,7 @@ class ShootingDiaryService {
             case 'shotsDispersionBySpot':
 
                 {
-                const data =  await db('basketball_shooting_diary').select('shooter_id', 'spot_key', db.raw('SUM(tries)'))
+                const data =  await db(this.dbName).select('shooter_id', 'spot_key', db.raw('SUM(tries)'))
                 .whereIn('shooter_id', usersIds)
                 .whereIn('spot_key', spotKeysArray)
                 .groupBy('spot_key', 'shooter_id')
@@ -82,7 +84,7 @@ class ShootingDiaryService {
             case 'shotsPersentageChart':
 
                 {
-                const data = await db('basketball_shooting_diary').select('shooter_id', db.raw('DATE_TRUNC(\'day\', "trainingDateISO") as truncated_date'), db.raw('SUM(tries) as sum_tries'), db.raw('SUM(makes) as sum_makes'))
+                const data = await db(this.dbName).select('shooter_id', db.raw('DATE_TRUNC(\'day\', "trainingDateISO") as truncated_date'), db.raw('SUM(tries) as sum_tries'), db.raw('SUM(makes) as sum_makes'))
                 .whereIn('shooter_id', usersIds)
                 .whereIn('spot_key', spotKeysArray)
                 .whereBetween('trainingDateISO', timeRange)
@@ -94,7 +96,7 @@ class ShootingDiaryService {
 
             case 'shotsAmountChart':
                 {
-                const data = await db('basketball_shooting_diary').select('shooter_id', db.raw('DATE_TRUNC(\'day\', "trainingDateISO") as truncated_date'), db.raw('SUM(tries) as sum_tries'), db.raw('SUM(makes) as sum_makes'))
+                const data = await db(this.dbName).select('shooter_id', db.raw('DATE_TRUNC(\'day\', "trainingDateISO") as truncated_date'), db.raw('SUM(tries) as sum_tries'), db.raw('SUM(makes) as sum_makes'))
                 .whereIn('shooter_id', usersIds)
                 .whereIn('spot_key', spotKeysArray)
                 .whereBetween('trainingDateISO', timeRange)
@@ -106,7 +108,7 @@ class ShootingDiaryService {
                
             case 'shotsAmountAndPercentageChart':
                 {
-                const data = await db('basketball_shooting_diary').select('shooter_id', db.raw('DATE_TRUNC(\'day\', "trainingDateISO") as truncated_date'), 'spot_key', db.raw('SUM(tries) as sum_tries'), db.raw('SUM(makes) as sum_makes'))
+                const data = await db(this.dbName).select('shooter_id', db.raw('DATE_TRUNC(\'day\', "trainingDateISO") as truncated_date'), 'spot_key', db.raw('SUM(tries) as sum_tries'), db.raw('SUM(makes) as sum_makes'))
                 .whereIn('shooter_id', usersIds)
                 .whereIn('spot_key', spotKeysArray)
                 .whereBetween('trainingDateISO', timeRange)
@@ -124,7 +126,7 @@ class ShootingDiaryService {
 
     getUserTriesAndMakesAmountBySpots = async (shooterId, spotKeysArray) => {
 
-        const data = await db('basketball_shooting_diary').select('shooter_id', db.raw('SUM(tries) as sum_tries'), db.raw('SUM(makes) as sum_makes'))
+        const data = await db(this.dbName).select('shooter_id', db.raw('SUM(tries) as sum_tries'), db.raw('SUM(makes) as sum_makes'))
         .where({'shooter_id': shooterId})
         .whereIn('spot_key', spotKeysArray)
         .groupBy('shooter_id');
@@ -135,7 +137,7 @@ class ShootingDiaryService {
     removeSetById = async (setsIds) => {
 
         try {
-            return await db('basketball_shooting_diary')
+            return await db(this.dbName)
             .whereIn('shooting_rep_id', setsIds)
             .del()
 
