@@ -13,7 +13,7 @@ module.exports = class TrainingSetDto {
 
         this.shootingRepId = model.shooting_rep_id
         this.shooterId = model.shooter_id
-        this.dateStr = model.trainingDateFormatted
+        this.dateStr = model.training_date_formatted
         this.spotKey = model.spot_key
         this.shootingHostUserId = model.shooting_host_user_id
         this.tries = model.tries

@@ -14,10 +14,11 @@ class ShootingDiaryController {
 
             const trainingDateFormatted = getCurrentDateFormatted()
             const trainingDateISO = getISODateByKey('current');
+            const createdAt = trainingDateISO;
 
             const {shooterId, spotKey, tries, makes} = req.body;
 
-            await shootingDiaryService.saveShootingSet(shooterId, trainingDateFormatted, spotKey, trainingHostId, tries, makes, trainingDateISO);
+            await shootingDiaryService.saveShootingSet(shooterId, trainingDateFormatted, spotKey, trainingHostId, tries, makes, trainingDateISO, createdAt);
             // await shootingDiaryService.saveShootingFakeData(shooterId);
 
 

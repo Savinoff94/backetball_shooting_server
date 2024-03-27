@@ -23,7 +23,7 @@
     "mongoose": "^7.3.4",
     "nodemailer": "^6.9.4",
     "pg": "^8.11.3",
-    "uuid": "^9.0.0"
+    "uuid": "^9.0.1"
   },
   "devDependencies": {
     "nodemon": "^3.0.1"

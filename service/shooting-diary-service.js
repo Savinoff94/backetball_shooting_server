@@ -5,24 +5,26 @@ const ShootingSpotsConstants = require ('../helpers/shooting-spots-constants');
 const ChartDTOs = require('../dtos/chart-dtos');
 const {fakeShootingDataSet, fakeShootingDataSet_2, fakeShootingDataSet_3} = require('../helpers/fakeShootingSets');
 
-
+const { v4: uuidv4 } = require('uuid');
 
 class ShootingDiaryService {
 
     dbName = 'basketball_shooting_diary';
 
-    saveShootingSet = async (shooterId, trainingDateFormatted, spotKey, trainingHostId, tries, makes, trainingDateISO) => {
+    saveShootingSet = async (shooterId, trainingDateFormatted, spotKey, trainingHostId, tries, makes, trainingDateISO, createdAt) => {
 
         try {
 
             await db(this.dbName).insert({
-                shooter_id:            shooterId,
-                spot_key:              spotKey,
-                trainingDateFormatted: trainingDateFormatted,
-                trainingDateISO:       trainingDateISO,
-                shooting_host_user_id: trainingHostId,
+                shooting_rep_id:         uuidv4(),
+                shooter_id:              shooterId,
+                spot_key:                spotKey,
+                training_date_formatted: trainingDateFormatted,
+                training_date_iso:       trainingDateISO,
+                shooting_host_user_id:   trainingHostId,
                 tries,
                 makes,
+                created_at:              createdAt
             })
             
         } catch (error) {
@@ -65,7 +67,7 @@ class ShootingDiaryService {
                 .whereIn('shooter_id', usersIds)
                 .whereIn('spot_key', spotKeysArray)
                 .groupBy('spot_key', 'shooter_id')
-                .whereBetween('trainingDateISO', timeRange)
+                .whereBetween('training_date_iso', timeRange)
 
                 return ChartDTOs.toShotsDispersionDTO(data, true)
                 }
@@ -76,7 +78,7 @@ class ShootingDiaryService {
                 .whereIn('shooter_id', usersIds)
                 .whereIn('spot_key', spotKeysArray)
                 .groupBy('spot_key', 'shooter_id')
-                .whereBetween('trainingDateISO', timeRange)
+                .whereBetween('training_date_iso', timeRange)
                 
                 return ChartDTOs.toShotsDispersionDTO(data, false);
                 }
@@ -84,11 +86,11 @@ class ShootingDiaryService {
             case 'shotsPersentageChart':
 
                 {
-                const data = await db(this.dbName).select('shooter_id', db.raw('DATE_TRUNC(\'day\', "trainingDateISO") as truncated_date'), db.raw('SUM(tries) as sum_tries'), db.raw('SUM(makes) as sum_makes'))
+                const data = await db(this.dbName).select('shooter_id', db.raw('DATE_TRUNC(\'day\', "training_date_iso") as truncated_date'), db.raw('SUM(tries) as sum_tries'), db.raw('SUM(makes) as sum_makes'))
                 .whereIn('shooter_id', usersIds)
                 .whereIn('spot_key', spotKeysArray)
-                .whereBetween('trainingDateISO', timeRange)
-                .groupBy( 'shooter_id', db.raw('DATE_TRUNC(\'day\', "trainingDateISO")'))
+                .whereBetween('training_date_iso', timeRange)
+                .groupBy( 'shooter_id', db.raw('DATE_TRUNC(\'day\', "training_date_iso")'))
                 .orderBy('truncated_date')
 
                 return ChartDTOs.toShotsNotGroupedBySpotDTO(data)
@@ -96,11 +98,11 @@ class ShootingDiaryService {
 
             case 'shotsAmountChart':
                 {
-                const data = await db(this.dbName).select('shooter_id', db.raw('DATE_TRUNC(\'day\', "trainingDateISO") as truncated_date'), db.raw('SUM(tries) as sum_tries'), db.raw('SUM(makes) as sum_makes'))
+                const data = await db(this.dbName).select('shooter_id', db.raw('DATE_TRUNC(\'day\', "training_date_iso") as truncated_date'), db.raw('SUM(tries) as sum_tries'), db.raw('SUM(makes) as sum_makes'))
                 .whereIn('shooter_id', usersIds)
                 .whereIn('spot_key', spotKeysArray)
-                .whereBetween('trainingDateISO', timeRange)
-                .groupBy( 'shooter_id', db.raw('DATE_TRUNC(\'day\', "trainingDateISO")'))
+                .whereBetween('training_date_iso', timeRange)
+                .groupBy( 'shooter_id', db.raw('DATE_TRUNC(\'day\', "training_date_iso")'))
                 .orderBy('truncated_date')
 
                 return ChartDTOs.toShotsNotGroupedBySpotDTO(data)
@@ -108,11 +110,11 @@ class ShootingDiaryService {
                
             case 'shotsAmountAndPercentageChart':
                 {
-                const data = await db(this.dbName).select('shooter_id', db.raw('DATE_TRUNC(\'day\', "trainingDateISO") as truncated_date'), 'spot_key', db.raw('SUM(tries) as sum_tries'), db.raw('SUM(makes) as sum_makes'))
+                const data = await db(this.dbName).select('shooter_id', db.raw('DATE_TRUNC(\'day\', "training_date_iso") as truncated_date'), 'spot_key', db.raw('SUM(tries) as sum_tries'), db.raw('SUM(makes) as sum_makes'))
                 .whereIn('shooter_id', usersIds)
                 .whereIn('spot_key', spotKeysArray)
-                .whereBetween('trainingDateISO', timeRange)
-                .groupBy('shooter_id', 'spot_key', db.raw('DATE_TRUNC(\'day\', "trainingDateISO")'))
+                .whereBetween('training_date_iso', timeRange)
+                .groupBy('shooter_id', 'spot_key', db.raw('DATE_TRUNC(\'day\', "training_date_iso")'))
                 .orderBy('truncated_date')
                 
                 return ChartDTOs.toShotsGroupedBySpotDTO(data)
