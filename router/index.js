@@ -22,9 +22,6 @@ router.get('/activate/:link', userController.activate);
 router.get('/refresh', userController.refresh);
 
 
-router.get('/', userController.tmp);
-
-
 
 router.post('/getTrainingSquadList', authMiddleware, userConnectionsController.getTrainingSquadList);
 router.post('/saveShootingSet', authMiddleware, shootingDiaryController.saveShootingSet);
