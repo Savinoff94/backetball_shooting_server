@@ -74,6 +74,16 @@ class UserController {
         }
     }
 
+    async tmp(req,res,next) {
+
+        try {
+            
+            return res.json({userData: 'qqqqqqqqqqq'})
+        } catch (error) {
+            next(error);
+        }
+    }
+
     async searchUsers(req,res,next) {
 
         try {
