@@ -15,10 +15,7 @@ app.use(express.json());
 app.use(cookieParser());
 app.use(cors({
     credentials: true,
-    // origin: process.env.CLIENT_URL
-    // origin: 'http://localhost:3000'
-    origin: 'https://lucky-pixie-719978.netlify.app'
-    // origin: '*'
+    origin: process.env.CLIENT_URL
 }));
 app.use('/api', router);
 
